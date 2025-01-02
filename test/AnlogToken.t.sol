@@ -12,7 +12,13 @@ contract AnlogTokenTest is Test {
     }
 
     function test_Mint() public {
-        assert(false);
+        assertEq(token.totalSupply(), 0);
+
+        token.mint(address(1), 20_000);
+
+        assertEq(token.totalSupply(), 20_000);
+        assertEq(token.balanceOf(address(1)), 20_000);
+
     }
 
     function test_Pause() public {
