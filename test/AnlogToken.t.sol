@@ -4,6 +4,9 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {AnlogToken} from "../src/AnlogToken.sol";
 
+/// @notice OZ ERC20 and its presets are covered with Hardhat tests.
+/// Hence we keep these few basic tests here more as a boilerplate for
+/// the future tests for custom added fetaures.
 contract AnlogTokenTest is Test {
     AnlogToken public token;
 
@@ -28,7 +31,13 @@ contract AnlogTokenTest is Test {
         assertEq(token.balanceOf(address(2)), 5_000);
     }
 
-    function test_Pause() public {
-        assert(false);
+    function test_Pause() public preMint(address(this), 20_000) {
+        token.pause();
+
+        vm.expectRevert(bytes("ERC20Pausable: token transfer while paused"));
+        token.transfer(address(2), 5_000);
+
+        vm.expectRevert(bytes("ERC20Pausable: token transfer while paused"));
+        token.mint(address(this), 1);
     }
 }
