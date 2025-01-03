@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.22;
 
 import {Test, console} from "forge-std/Test.sol";
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {AnlogToken} from "../src/AnlogToken.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
@@ -10,8 +11,12 @@ import {AnlogToken} from "../src/AnlogToken.sol";
 contract AnlogTokenTest is Test {
     AnlogToken public token;
 
+    /// @notice deploys a UUPS proxy
     function setUp() public {
-        token = new AnlogToken("Analog One", "ANLOG");
+        // deploy proxy with this contract as the Owner
+        address proxy =
+            Upgrades.deployUUPSProxy("AnlogToken.sol", abi.encodeCall(AnlogToken.initialize, (address(this))));
+        token = AnlogToken(proxy);
     }
 
     modifier preMint(address to, uint256 amount) {
