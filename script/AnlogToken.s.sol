@@ -12,7 +12,7 @@ contract AnlogTokenScript is Script {
     function run() public {
         vm.startBroadcast();
 
-//        token = new AnlogToken("Analog One", "ANLOG");
+        //        token = new AnlogToken("Analog One", "ANLOG");
 
         vm.stopBroadcast();
     }

@@ -3,6 +3,7 @@ pragma solidity ^0.8.22;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {AnlogToken} from "../src/AnlogToken.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
@@ -39,10 +40,11 @@ contract AnlogTokenTest is Test {
     function test_Pause() public preMint(address(this), 20_000) {
         token.pause();
 
-        vm.expectRevert(bytes("ERC20Pausable: token transfer while paused"));
+        // error EnforcedPause()
+        vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         token.transfer(address(2), 5_000);
 
-        vm.expectRevert(bytes("ERC20Pausable: token transfer while paused"));
+        vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         token.mint(address(this), 1);
     }
 }
