@@ -37,6 +37,12 @@ contract AnlogTokenV1Test is Test {
         _;
     }
 
+    modifier paused() {
+        vm.prank(PAUSER);
+        token.pause();
+        _;
+    }
+
     function test_Mint() public preMint(address(this), 20_000) {
         assertEq(token.balanceOf(address(this)), 20_000);
     }
@@ -47,10 +53,7 @@ contract AnlogTokenV1Test is Test {
         assertEq(token.balanceOf(address(2)), 5_000);
     }
 
-    function test_Pause() public preMint(address(this), 20_000) {
-        vm.prank(PAUSER);
-        token.pause();
-
+    function test_Pause() public preMint(address(this), 20_000) paused {
         // error EnforcedPause()
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         token.transfer(address(2), 5_000);
@@ -58,6 +61,14 @@ contract AnlogTokenV1Test is Test {
         vm.prank(MINTER);
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         token.mint(address(this), 1);
+    }
+
+    function test_UnPause() public preMint(address(this), 20_000) paused {
+        vm.prank(UNPAUSER);
+        token.unpause();
+
+        token.transfer(address(2), 5_000);
+        assertEq(token.balanceOf(address(2)), 5_000);
     }
 
     function test_RevertWhen_Unauthorized_Mint() public {
@@ -80,7 +91,7 @@ contract AnlogTokenV1Test is Test {
         token.pause();
     }
 
-    function test_RevertWhen_Unauthorized_UnPause() public {
+    function test_RevertWhen_Unauthorized_UnPause() public paused {
         vm.prank(MINTER);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -89,5 +100,4 @@ contract AnlogTokenV1Test is Test {
         );
         token.unpause();
     }
-
 }
