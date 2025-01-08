@@ -14,7 +14,7 @@ contract AnlogTokenV0Test is Test {
 
     /// @notice deploys an UUPS proxy
     function setUp() public {
-        // deploy proxy with this contract as the Owner
+        // deploy proxy with V0 implementation having this contract as the Owner
         address proxy =
             Upgrades.deployUUPSProxy("AnlogTokenV0.sol", abi.encodeCall(AnlogTokenV0.initialize, (address(this))));
         token = AnlogTokenV0(proxy);
@@ -40,7 +40,6 @@ contract AnlogTokenV0Test is Test {
     function test_Pause() public preMint(address(this), 20_000) {
         token.pause();
 
-        // error EnforcedPause()
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         token.transfer(address(2), 5_000);
 

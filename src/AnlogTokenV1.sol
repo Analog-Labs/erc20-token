@@ -11,6 +11,8 @@ import {ERC20PausableUpgradeable} from
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
+// TODO needed solely for Upgrade test
+/// @custom:oz-upgrades-from AnlogTokenV0
 contract AnlogTokenV1 is
     Initializable,
     ERC20Upgradeable,
@@ -19,6 +21,12 @@ contract AnlogTokenV1 is
     AccessControlUpgradeable,
     UUPSUpgradeable
 {
+    // TODO needed solely for Upgrade test
+    /// @custom:storage-location erc7201:openzeppelin.storage.Ownable
+    struct OwnableStorage {
+        address _owner;
+    }
+
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -29,7 +37,8 @@ contract AnlogTokenV1 is
         _disableInitializers();
     }
 
-    function initialize(address minter, address upgrader, address pauser, address unpauser) public initializer {
+    // TODO needed solely for Upgrade test
+    function initialize(address minter, address upgrader, address pauser, address unpauser) public reinitializer(2) {
         __ERC20_init("Analog One Token", "ANLOG");
         __ERC20Burnable_init();
         __ERC20Pausable_init();
