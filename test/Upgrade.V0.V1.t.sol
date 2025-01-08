@@ -4,12 +4,12 @@ pragma solidity ^0.8.22;
 import {Test, console} from "forge-std/Test.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {AnlogTokenV0} from "../src/AnlogTokenV0.sol";
-import {AnlogTokenV1} from "../src/AnlogTokenV1.sol";
+import {AnlogTokenV1Upgrade} from "../src/AnlogTokenV1Upgrade.sol";
 
 /// @notice test for V0->V1 AnlogToken upgrade
 contract UpgradeV0V1Test is Test {
     AnlogTokenV0 public tokenV0;
-    AnlogTokenV1 public tokenV1;
+    AnlogTokenV1Upgrade public tokenV1;
 
     address constant MINTER = address(0);
     address constant UPGRADER = address(1);
@@ -44,8 +44,8 @@ contract UpgradeV0V1Test is Test {
     function test_Upgrade() public {
         Upgrades.upgradeProxy(
             address(tokenV0),
-            "AnlogTokenV1.sol",
-            abi.encodeCall(AnlogTokenV1.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER))
+            "AnlogTokenV1Upgrade.sol",
+            abi.encodeCall(AnlogTokenV1Upgrade.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER))
         );
     }
 }
