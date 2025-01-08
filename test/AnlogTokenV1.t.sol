@@ -4,31 +4,40 @@ pragma solidity ^0.8.22;
 import {Test, console} from "forge-std/Test.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
-import {AnlogTokenV0} from "../src/AnlogTokenV0.sol";
+import {AnlogTokenV1} from "../src/AnlogTokenV1.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
 /// Hence we keep these few basic tests here more as a boilerplate for
 /// the future tests for custom added fetaures.
-contract AnlogTokenV0Test is Test {
-    AnlogTokenV0 public token;
+contract AnlogTokenV1Test is Test {
+    AnlogTokenV1 public token;
 
-    /// @notice deploys an UUPS proxy
+    address constant MINTER = address(0);
+    address constant UPGRADER = address(1);
+    address constant PAUSER = address(2);
+    address constant UNPAUSER = address(3);
+
+    /// @notice deploys an UUPS proxy.
+    /// Here we start with the V1 implementation right away.
+    /// For V0->V1 upgrade see another test.
     function setUp() public {
-        // deploy proxy with this contract as the Owner
-        address proxy =
-            Upgrades.deployUUPSProxy("AnlogTokenV0.sol", abi.encodeCall(AnlogTokenV0.initialize, (address(this))));
-        token = AnlogTokenV0(proxy);
+        // deploy proxy with a distinct address assigned to each role
+        address proxy = Upgrades.deployUUPSProxy(
+            "AnlogTokenV1.sol", abi.encodeCall(AnlogTokenV1.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER))
+        );
+        token = AnlogTokenV1(proxy);
     }
 
     modifier preMint(address to, uint256 amount) {
         assertEq(token.totalSupply(), 0);
+        vm.prank(MINTER);
         token.mint(to, amount);
         assertEq(token.totalSupply(), amount);
         _;
     }
 
-    function test_Mint() public preMint(address(1), 20_000) {
-        assertEq(token.balanceOf(address(1)), 20_000);
+    function test_Mint() public preMint(address(this), 20_000) {
+        assertEq(token.balanceOf(address(this)), 20_000);
     }
 
     function test_Transfer() public preMint(address(this), 20_000) {
@@ -38,12 +47,14 @@ contract AnlogTokenV0Test is Test {
     }
 
     function test_Pause() public preMint(address(this), 20_000) {
+        vm.prank(PAUSER);
         token.pause();
 
         // error EnforcedPause()
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         token.transfer(address(2), 5_000);
 
+        vm.prank(MINTER);
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         token.mint(address(this), 1);
     }
