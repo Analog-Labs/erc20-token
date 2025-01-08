@@ -47,7 +47,7 @@ contract AnlogTokenV1 is
         _pause();
     }
 
-    function unpause() public onlyRole(PAUSER_ROLE) {
+    function unpause() public onlyRole(UNPAUSER_ROLE) {
         _unpause();
     }
 

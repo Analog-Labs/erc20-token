@@ -79,4 +79,15 @@ contract AnlogTokenV1Test is Test {
         );
         token.pause();
     }
+
+    function test_RevertWhen_Unauthorized_UnPause() public {
+        vm.prank(MINTER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, MINTER, keccak256("UNPAUSER_ROLE")
+            )
+        );
+        token.unpause();
+    }
+
 }
