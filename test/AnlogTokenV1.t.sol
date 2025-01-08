@@ -34,6 +34,7 @@ contract AnlogTokenV1Test is Test {
         vm.prank(MINTER);
         token.mint(to, amount);
         assertEq(token.totalSupply(), amount);
+        assertEq(token.balanceOf(to), amount);
         _;
     }
 

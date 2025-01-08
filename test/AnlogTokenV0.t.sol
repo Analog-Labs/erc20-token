@@ -24,6 +24,7 @@ contract AnlogTokenV0Test is Test {
         assertEq(token.totalSupply(), 0);
         token.mint(to, amount);
         assertEq(token.totalSupply(), amount);
+        assertEq(token.balanceOf(to), amount);
         _;
     }
 
