@@ -4,6 +4,7 @@ pragma solidity ^0.8.22;
 import {Test, console} from "forge-std/Test.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {AnlogTokenV1} from "../src/AnlogTokenV1.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
@@ -57,5 +58,15 @@ contract AnlogTokenV1Test is Test {
         vm.prank(MINTER);
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         token.mint(address(this), 1);
+    }
+
+    function test_RevertWhen_Unauthorized_Mint() public {
+        vm.prank(UPGRADER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, UPGRADER, keccak256("MINTER_ROLE")
+            )
+        );
+        token.mint(UPGRADER, 100_000);
     }
 }
