@@ -1,12 +1,6 @@
 # $ANLOG ERC20 Token 
 
-## Spec 
-
-### Business Requirements 
-
-Laid out at this [Notion page](https://www.notion.so/teamanalog/Wrapped-Token-16d4872af8ca801db917f7cb1f7e2283).
-
-### Tech Specs 
+## Initial Requirements
 
 What is needed is an ERC20 implementation which
 
@@ -29,7 +23,15 @@ We prefer **UUPSUpgradeable** proxy, because it allows to eventually make the im
 [uups-proxy]: https://docs.openzeppelin.com/contracts/4.x/api/proxy#UUPSUpgradeable
 
 
-### Based on OpenZeppelin Libraries 
+### Business Requirements 
+
+Laid out at this [Notion page](https://www.notion.so/teamanalog/Wrapped-Token-16d4872af8ca801db917f7cb1f7e2283).
+
+### Tech Spec 
+
+See [SPEC.md](spec.md).
+
+## Based on OpenZeppelin Libraries 
 
 Our token implementation is based on well-tested and audited industry-wide standard libraries and plugins: 
 
@@ -39,3 +41,17 @@ Our token implementation is based on well-tested and audited industry-wide stand
 ## Foundry
 
 This project is built with the [Foundry](https://book.getfoundry.sh/) framework.
+
+### Tests 
+
+If changed some contract, run this first:
+
+``` sh
+forge fmt && forge clean && forge build
+```
+
+Then run tests: 
+
+``` sh
+forge test
+```
