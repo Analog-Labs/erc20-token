@@ -5,8 +5,8 @@ import {Test, console} from "forge-std/Test.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {AnlogTokenV0} from "../src/AnlogTokenV0.sol";
-import {AnlogTokenV1Upgrade} from "../src/AnlogTokenV1Upgrade.sol";
+import {AnlogTokenV0} from "./mock/AnlogTokenV0.sol";
+import {AnlogTokenV1Upgrade} from "./mock/AnlogTokenV1Upgrade.sol";
 
 /// @notice test for V0->V1 AnlogToken upgrade
 contract UpgradeV0V1Test is Test {
