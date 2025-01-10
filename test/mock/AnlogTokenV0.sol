@@ -11,7 +11,9 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract AnlogToken is
+/// @notice V0 is used only for the Upgrade test.
+/// This is Ownable implementation of upgradable ERC20 token.
+contract AnlogTokenV0 is
     Initializable,
     ERC20Upgradeable,
     ERC20BurnableUpgradeable,

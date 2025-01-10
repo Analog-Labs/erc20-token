@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import {AnlogToken} from "../src/AnlogToken.sol";
+import {AnlogTokenV1} from "../src/AnlogTokenV1.sol";
 
 contract AnlogTokenScript is Script {
-    AnlogToken public token;
+    AnlogTokenV1 public token;
 
     function setUp() public {}
 
