@@ -12,10 +12,15 @@ contract AnlogTokenScript is Script {
 
     function run() public {
         address deployer = vm.envAddress("DEPLOYER");
+        address minter = vm.envAddress("MINTER");
+        address upgrader = vm.envAddress("UPGRADER");
+        address pauser = vm.envAddress("PAUSER");
+        address unpauser = vm.envAddress("UNPAUSER");
+
         vm.startBroadcast(deployer);
 
         address proxyAddress = Upgrades.deployUUPSProxy(
-            "AnlogTokenV1.sol", abi.encodeCall(AnlogTokenV1.initialize, (deployer, deployer, deployer, deployer))
+            "AnlogTokenV1.sol", abi.encodeCall(AnlogTokenV1.initialize, (minter, upgrader, pauser, unpauser))
         );
 
         vm.stopBroadcast();
