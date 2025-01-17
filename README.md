@@ -60,7 +60,7 @@ forge test
 
 ### Locally to Anvil
 
-Spin out an Anvil node:
+Spin out an [Anvil](https://book.getfoundry.sh/anvil/) node:
 
 ``` sh
 anvil
@@ -70,6 +70,6 @@ Load environment variables and run the deployment script:
 
 ``` sh
 source .env.anvil
-forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast
+forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
 

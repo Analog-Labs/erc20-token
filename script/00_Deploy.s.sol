@@ -12,6 +12,7 @@ contract AnlogTokenScript is Script {
 
     function run() public {
         address deployer = vm.envAddress("DEPLOYER");
+        
         address minter = vm.envAddress("MINTER");
         address upgrader = vm.envAddress("UPGRADER");
         address pauser = vm.envAddress("PAUSER");
@@ -25,6 +26,11 @@ contract AnlogTokenScript is Script {
 
         vm.stopBroadcast();
 
-        console.log("Deployed AnlogTokenV1.sol at ", proxyAddress);
+        console.log("[dry-run] Deployed AnlogTokenV1.sol at ", proxyAddress);
+        console.log(" ROLES:");
+        console.log("   MINTER: ", minter);
+        console.log("   UPGRADER: ", upgrader);
+        console.log("   PAUSER: ", pauser);
+        console.log("   UNPAUSER: ", unpauser);
     }
 }
