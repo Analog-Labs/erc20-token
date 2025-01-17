@@ -42,7 +42,7 @@ Our token implementation is based on well-tested and audited industry-wide stand
 
 This project is built with the [Foundry](https://book.getfoundry.sh/) framework.
 
-### Tests 
+## Testing 
 
 If changed some contract, run this first:
 
@@ -55,3 +55,21 @@ Then run tests:
 ``` sh
 forge test
 ```
+
+## Deployment 
+
+### Locally to Anvil
+
+Spin out an Anvil node:
+
+``` sh
+anvil
+```
+
+Load environment variables and run the deployment script:
+
+``` sh
+source .env.anvil
+forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast
+```
+
