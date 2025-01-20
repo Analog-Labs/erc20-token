@@ -90,7 +90,7 @@ source .env.sepolia
 anvil -f $SEPOLIA_RPC_URL -p 9545
 ```
 
-Deploy 
+Deploy: 
 
 ``` sh
 source .env.sepolia
@@ -98,3 +98,9 @@ forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
 
 Make sure to provide the private key of the `DEPLOYER` account to script's interactive prompt.
+
+> [!NOTE]  
+> You can also use hardware wallet for signing the transaction. E.g. for using with _Ledger_ run: 
+> ```sh 
+> forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -l
+> ```
