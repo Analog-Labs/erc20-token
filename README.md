@@ -1,9 +1,9 @@
-# $ANLOG ERC20 Token 
 
 > [!CAUTION]  
 > While this upgradeable token smart contract is built using [audited OZ libraries](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v5.2.0/audits),  
 > **this particular implementation has not yet underwent any security audits. Use at your own risk.**
 
+# $ANLOG ERC20 Token 
 
 ## Initial Requirements
 
