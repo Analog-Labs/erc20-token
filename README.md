@@ -1,5 +1,10 @@
 # $ANLOG ERC20 Token 
 
+> [!CAUTION]  
+> While this upgradeable token smart contract is built using [audited OZ libraries](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v5.2.0/audits),  
+> **this particular implementation has not yet underwent any security audits. Use at your own risk.**
+
+
 ## Initial Requirements
 
 What is needed is an ERC20 implementation which
@@ -8,19 +13,19 @@ What is needed is an ERC20 implementation which
 2.  Is **pausable**,
 3.  Is **upgradeable**.
 
-For pp.1-2 OZ&rsquo;s [ERC20PresetMinterPauser](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.9.6/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol) preset should be used.  
+For pp.1-2 OZ&rsquo;s [ERC20Upgradeable](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v5.2.0/contracts/token/ERC20/) should be used with corresponding extensions.  
 
 For p.3 (**upgradeability**) the following options are available: 
 
 > - [TransparentUpgradeableProxy][transparent-proxy]: A proxy with a built in admin and upgrade interface
 > - [UUPSUpgradeable][uups-proxy]: An upgradeability mechanism to be included in the implementation contract.
 > 
-> ([source](https://docs.openzeppelin.com/contracts/4.x/api/proxy#transparent-vs-uups))
+> ([source](https://docs.openzeppelin.com/contracts/5.x/api/proxy#transparent-vs-uups))
 
 We prefer **UUPSUpgradeable** proxy, because it allows to eventually make the implementation contract non-upgradeable, therefore making its final version immutable, which _might_ be preferable for exchanges and token holders as it implies less trust and removes possible security breaches (like e.g. updating token contract to something working not as agreed or breaking its logic partially or overall).   
 
 [transparent-proxy]: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/transparent/TransparentUpgradeableProxy.sol
-[uups-proxy]: https://docs.openzeppelin.com/contracts/4.x/api/proxy#UUPSUpgradeable
+[uups-proxy]: https://docs.openzeppelin.com/contracts/5.x/api/proxy#UUPSUpgradeable
 
 
 ### Business Requirements 
