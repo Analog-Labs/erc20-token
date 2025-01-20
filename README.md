@@ -73,14 +73,15 @@ source .env.anvil
 forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
 
-It will ask you to enter the private key. As we're using Anvil's default `account (0)` as the deployer (specified in the [`.env.anvil`](./.env.anvil)), use its (**!well-known!**) key here (can be found in Ancil's logs). 
+It will ask you to enter the private key. As we're using Anvil's default `account (0)` as the deployer (specified in the [`.env.anvil`](./.env.anvil)), use its (**!well-known!**) key here (can be found in Anvil logs). 
 
 ### To Sepolia testnet 
 
-#### Dry-run on Fork 
 
 > [!IMPORTANT]  
 > You need to setup environment first, see [`.env.sepolia.example`](./.env.sepolia.example)
+
+#### Dry-run on Fork 
 
 Spin out an Anvil fork of Sepolia network:
 
@@ -93,5 +94,7 @@ Deploy
 
 ``` sh
 source .env.sepolia
-anvil -f $SEPOLIA_RPC_URL -p 9545
+forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
+
+Make sure to provide the private key of the `DEPLOYER` account to script's interactive prompt.
