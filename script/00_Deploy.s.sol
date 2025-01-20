@@ -12,7 +12,7 @@ contract AnlogTokenScript is Script {
 
     function run() public {
         address deployer = vm.envAddress("DEPLOYER");
-        
+
         address minter = vm.envAddress("MINTER");
         address upgrader = vm.envAddress("UPGRADER");
         address pauser = vm.envAddress("PAUSER");
