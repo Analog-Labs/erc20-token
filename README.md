@@ -60,7 +60,7 @@ forge test
 
 ### Locally to Anvil
 
-Spin out an [Anvil](https://book.getfoundry.sh/anvil/) node:
+Spin out a default [Anvil](https://book.getfoundry.sh/anvil/) node:
 
 ``` sh
 anvil -p 9545
@@ -74,3 +74,24 @@ forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
 
 It will ask you to enter the private key. As we're using Anvil's default `account (0)` as the deployer (specified in the [`.env.anvil`](./.env.anvil)), use its (**!well-known!**) key here (can be found in Ancil's logs). 
+
+### To Sepolia testnet 
+
+#### Dry-run on Fork 
+
+> [!IMPORTANT]  
+> You need to setup environment first, see [`.env.sepolia.example`](./.env.sepolia.example)
+
+Spin out an Anvil fork of Sepolia network:
+
+``` sh
+source .env.sepolia
+anvil -f $SEPOLIA_RPC_URL -p 9545
+```
+
+Deploy 
+
+``` sh
+source .env.sepolia
+anvil -f $SEPOLIA_RPC_URL -p 9545
+```
