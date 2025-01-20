@@ -63,7 +63,7 @@ forge test
 Spin out an [Anvil](https://book.getfoundry.sh/anvil/) node:
 
 ``` sh
-anvil
+anvil -p 9545
 ```
 
 Load environment variables and run the deployment script:
@@ -73,3 +73,4 @@ source .env.anvil
 forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
 
+It will ask you to enter the private key. As we're using Anvil's default `account (0)` as the deployer (specified in the [`.env.anvil`](./.env.anvil)), use its (**!well-known!**) key here (can be found in Ancil's logs). 
