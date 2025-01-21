@@ -44,6 +44,15 @@ contract AnlogTokenV1Test is Test {
         _;
     }
 
+    function test_name_and_ticker() public view {
+        assertEq(token.name(), "Wrapped Analog One Token");
+        assertEq(token.symbol(), "WANLOG");
+    }
+
+    function test_decimals() public view {
+        assertEq(token.decimals(), 12);
+    }
+
     function test_Mint() public preMint(address(this), 20_000) {
         assertEq(token.balanceOf(address(this)), 20_000);
     }

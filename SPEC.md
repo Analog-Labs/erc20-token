@@ -4,9 +4,9 @@
 
 ### Basic Config 
 
-1. **Token name**: `"Analog One Token"`.
-2. **Token ticker**: `"ANLOG"`.
-3. **Token decimals**: `18`.
+1. **Token name**: `"Wrapped Analog Token"`.
+2. **Token ticker**: `"WANLOG"`.
+3. **Token decimals**: `12`.
 4. **Pre-minted amount**: `0`.
 
 ### Extensions 

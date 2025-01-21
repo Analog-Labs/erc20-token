@@ -34,7 +34,7 @@ contract AnlogTokenV1 is
     }
 
     function initialize(address minter, address upgrader, address pauser, address unpauser) public initializer {
-        __ERC20_init("Analog One Token", "ANLOG");
+        __ERC20_init("Wrapped Analog One Token", "WANLOG");
         __ERC20Burnable_init();
         __ERC20Pausable_init();
         __AccessControl_init();
@@ -45,6 +45,10 @@ contract AnlogTokenV1 is
         _grantRole(DEFAULT_ADMIN_ROLE, upgrader);
         _grantRole(PAUSER_ROLE, pauser);
         _grantRole(UNPAUSER_ROLE, unpauser);
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 12;
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
