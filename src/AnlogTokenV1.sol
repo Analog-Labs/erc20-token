@@ -65,6 +65,18 @@ contract AnlogTokenV1 is
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
+        /// @dev Allows an address with UPGRADER_ROLE to grant or revoke any role
+    function updateRole(bytes32 role, address account, bool grant)
+        external
+        onlyRole(UPGRADER_ROLE)
+    {
+        if (grant) {
+            _grantRole(role, account);
+        } else {
+            _revokeRole(role, account);
+        }
+    }
+
     // The following functions are overrides required by Solidity.
 
     function _update(address from, address to, uint256 value)

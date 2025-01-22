@@ -65,6 +65,17 @@ contract AnlogTokenV1Upgrade is
         _mint(to, amount);
     }
 
+    function updateRole(bytes32 role, address account, bool grant)
+        external
+        onlyRole(UPGRADER_ROLE)
+    {
+        if (grant) {
+            _grantRole(role, account);
+        } else {
+            _revokeRole(role, account);
+        }
+    }
+
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
     // The following functions are overrides required by Solidity.
