@@ -94,6 +94,21 @@ contract AnlogTokenV1Test is Test {
         assertEq(token.totalSupply(), 25_000);
     }
 
+    function test_RevokeRole() public preMint(address(this), 20_000) {
+        assert(token.hasRole(keccak256("MINTER_ROLE"), MINTER));
+
+        vm.prank(UPGRADER);
+        token.revokeRole(keccak256("MINTER_ROLE"), MINTER);
+
+        vm.prank(MINTER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, MINTER, keccak256("MINTER_ROLE")
+            )
+        );
+        token.mint(MINTER, 5_000);
+    }
+
     function test_RevertWhen_Unauthorized_Mint() public {
         vm.prank(UPGRADER);
         vm.expectRevert(
