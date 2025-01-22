@@ -17,6 +17,7 @@ contract AnlogTokenV1Test is Test {
     address constant UPGRADER = address(1);
     address constant PAUSER = address(2);
     address constant UNPAUSER = address(3);
+    address constant NEW_MINTER = address(4);
 
     /// @notice deploys an UUPS proxy.
     /// Here we start with the V1 implementation right away.
@@ -79,6 +80,39 @@ contract AnlogTokenV1Test is Test {
 
         token.transfer(address(2), 5_000);
         assertEq(token.balanceOf(address(2)), 5_000);
+    }
+
+    function test_GrantRole() public preMint(address(this), 20_000) {
+        assertFalse(token.hasRole(keccak256("MINTER_ROLE"), NEW_MINTER));
+
+        vm.prank(UPGRADER);
+        token.grantRole(keccak256("MINTER_ROLE"), NEW_MINTER);
+
+        vm.prank(NEW_MINTER);
+        token.mint(NEW_MINTER, 5_000);
+        assertEq(token.balanceOf(NEW_MINTER), 5_000);
+        assertEq(token.totalSupply(), 25_000);
+    }
+
+    function test_RevokeRole() public preMint(address(this), 20_000) {
+        vm.prank(UPGRADER);
+        token.revokeRole(keccak256("MINTER_ROLE"), MINTER);
+
+        vm.prank(MINTER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, MINTER, keccak256("MINTER_ROLE")
+            )
+        );
+        token.mint(MINTER, 5_000);
+    }
+
+    function test_RevertWhen_Unauthorized_RevokeRole() public {
+        vm.prank(PAUSER);
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, PAUSER, 0x00));
+        token.revokeRole(keccak256("MINTER_ROLE"), MINTER);
+
+        assert(token.hasRole(keccak256("MINTER_ROLE"), MINTER));
     }
 
     function test_RevertWhen_Unauthorized_Mint() public {
