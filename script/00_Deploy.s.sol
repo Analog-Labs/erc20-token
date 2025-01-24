@@ -26,7 +26,7 @@ contract AnlogTokenScript is Script {
 
         vm.stopBroadcast();
 
-        console.log("[dry-run] Deployed AnlogTokenV1.sol at ", proxyAddress);
+        console.log("[dry-run] Deployed AnlogTokenV1.sol implentation to proxy address: ", proxyAddress);
         console.log(" ROLES:");
         console.log("   MINTER: ", minter);
         console.log("   UPGRADER: ", upgrader);
