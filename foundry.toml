@@ -7,6 +7,9 @@ ffi = true
 ast = true
 build_info = true
 extra_output = ["storageLayout"]
-
+# Build settings
+solc = "0.8.28"
+optimizer = true
+optimizer_runs = 10_000
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
