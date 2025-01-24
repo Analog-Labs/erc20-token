@@ -65,6 +65,9 @@ forge test
 
 ### Locally to Anvil
 
+<details>
+<summary>Expand me</summary>
+
 Spin out a default [Anvil](https://book.getfoundry.sh/anvil/) node:
 
 ``` sh
@@ -80,13 +83,17 @@ forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 
 It will ask you to enter the private key. As we're using Anvil's default `account (0)` as the deployer (specified in the [`.env.anvil`](./.env.anvil)), use its (**!well-known!**) key here (can be found in Anvil logs). 
 
-### To Sepolia testnet 
+</details>
 
+### To Sepolia testnet 
 
 > [!IMPORTANT]  
 > You need to setup environment first, see [`.env.sepolia.example`](./.env.sepolia.example)
 
 #### Dry-run on Fork 
+
+<details>
+<summary>Expand me</summary>
 
 Spin out an Anvil fork of Sepolia network:
 
@@ -103,14 +110,12 @@ forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
 
 Make sure to provide the private key of the `DEPLOYER` account upon script's interactive prompt.
+</details>
 
-> [!NOTE]  
-> You can also use hardware wallet for signing the transaction. E.g. for using with _Ledger_ run: 
-> ```sh 
-> forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -l
-> ```
 
 #### Real run on Sepolia 
+
+##### Deploy 
 
 Once steps described above taken and succeed, deploy to Sepolia with:
 
@@ -118,28 +123,67 @@ Once steps described above taken and succeed, deploy to Sepolia with:
 forge script script/00_Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast -i 1
 ```
 
+> [!NOTE]  
+> You can also use hardware wallet for signing the transaction. E.g. for using with _Ledger_ run: 
+> ```sh 
+> forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -l
+> ```
+
+##### Verify 
+
+Figure out `solc` version used to compile the contracts: 
+
+``` sh
+forge inspect src/AnlogTokenV1.sol:AnlogTokenV1 metadata | jq .compiler.version
+```
+
+To verify proxy contract run: 
+
+``` sh
+forge v --verifier etherscan --compiler-version=<solc_version> \
+--rpc-url=$SEPOLIA_RPC_URL <proxy_address> \
+./lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy
+```
+
+To verify implementation contract run: 
+
+``` sh
+forge v --verifier etherscan --compiler-version=<solc_version> \
+--rpc-url $SEPOLIA_RPC_URL <implementation_addresss> \
+src/AnlogTokenV1.sol:AnlogTokenV1
+```
+
 ### Upgrade instructions
 
 > [!NOTE]
-> Commands below are given for the setting when you upgrade from `V0` to `V1`. See [`Upgrade.V0.V1.t.sol`](test/Upgrade.V0.V1.t.sol) for the reference.
+> Commands below are given for the setting when you upgrade from `V0` to `V1Upgrade`. See [`Upgrade.V0.V1.t.sol`](test/Upgrade.V0.V1.t.sol) for the reference.
 
 
 Let say you have deployed proxy and `V0` implementation contract for it.  
-To upgrade the implementation contract to `V1`:
+To upgrade the implementation contract to `V1Upgrade`:
 
-1. Prepare calldata for V1 initializer:
+1. Deploy `V1Upgrade`:
+
+   ``` sh
+   source .env.sepolia
+   forge create --constructor-args=0x,0x,0x,0x \
+   --rpc-url $SEPOLIA_RPC_URL \
+   --from $DEPLOYER \
+   test/mock/AnlogTokenV1Upgrade.sol:AnlogTokenV1Upgrade -i --broadcast 
+   ```
+
+   **NOTE** that we provided `0x,0x,0x,0x` to the constructor args. That is because we don't care on the values of the implementation contract storage. The proxy storage will be updated in the following `initialize()` call right after the upgrade.
+
+2. Prepare `calldata` for `V1Upgrade` initializer:
 
    ```sh
    source .env.sepolia
-   cast ae "initialize(address,address,address,address)()" $MINTER $UPGRADER $PAUSER $UNPAUSER
+   cast cd "initialize(address,address,address,address)()" $MINTER $UPGRADER $PAUSER $UNPAUSER
    ``` 
-   You should get hex-encoded calldata as the result.
+   You should get hex-encoded `calldata` as the result.
 
-2. Dispatch the call to  [`upgradeToAndCall(address,bytes)`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/332bcb5f4d9cf0ae0f98fe91c77d9c1fb9951506/contracts/proxy/ERC1967/ERC1967Utils.sol#L67), providing the following args:
+3. Dispatch the call to  [`upgradeToAndCall(address,bytes)`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/332bcb5f4d9cf0ae0f98fe91c77d9c1fb9951506/contracts/proxy/ERC1967/ERC1967Utils.sol#L67), providing the following args:
 
-      - Current (`V0`) impl contract address;
-      - Calldata for the `V1` impl contract initializer 
+      - **address**: current (`V0`) implementation contract address;
+      - **bytes**: `calldata` for the `V1Upgrade` implementation contract initializer 
         (the one you've got on the previous step).
-
-
-
