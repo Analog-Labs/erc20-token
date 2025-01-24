@@ -118,5 +118,28 @@ Once steps described above taken and succeed, deploy to Sepolia with:
 forge script script/00_Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast -i 1
 ```
 
+### Upgrade instructions
+
+> [!NOTE]
+> Commands below are given for the setting when you upgrade from `V0` to `V1`. See [`Upgrade.V0.V1.t.sol`](test/Upgrade.V0.V1.t.sol) for the reference.
+
+
+Let say you have deployed proxy and `V0` implementation contract for it.  
+To upgrade the implementation contract to `V1`:
+
+1. Prepare calldata for V1 initializer:
+
+   ```sh
+   source .env.sepolia
+   cast ae "initialize(address,address,address,address)()" $MINTER $UPGRADER $PAUSER $UNPAUSER
+   ``` 
+   You should get hex-encoded calldata as the result.
+
+2. Dispatch the call to  [`upgradeToAndCall(address,bytes)`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/332bcb5f4d9cf0ae0f98fe91c77d9c1fb9951506/contracts/proxy/ERC1967/ERC1967Utils.sol#L67), providing the following args:
+
+      - Current (`V0`) impl contract address;
+      - Calldata for the `V1` impl contract initializer 
+        (the one you've got on the previous step).
+
 
 
