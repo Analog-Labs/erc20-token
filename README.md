@@ -127,7 +127,7 @@ forge script script/00_Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast -i 1
 Let say you have deployed proxy and `V0` implementation contract for it.  
 To upgrade the implementation contract to `V1`:
 
-3. Prepare calldata for V1 initializer:
+1. Prepare calldata for V1 initializer:
 
    ```sh
    source .env.sepolia
@@ -135,7 +135,7 @@ To upgrade the implementation contract to `V1`:
    ``` 
    You should get hex-encoded calldata as the result.
 
-4. Dispatch the call to  [`upgradeToAndCall(address,bytes)`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/332bcb5f4d9cf0ae0f98fe91c77d9c1fb9951506/contracts/proxy/ERC1967/ERC1967Utils.sol#L67), providing the following args:
+2. Dispatch the call to  [`upgradeToAndCall(address,bytes)`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/332bcb5f4d9cf0ae0f98fe91c77d9c1fb9951506/contracts/proxy/ERC1967/ERC1967Utils.sol#L67), providing the following args:
 
       - Current (`V0`) impl contract address;
       - Calldata for the `V1` impl contract initializer 
