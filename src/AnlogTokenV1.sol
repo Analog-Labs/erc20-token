@@ -66,12 +66,12 @@ contract AnlogTokenV1 is
     uint16 public immutable TIMECHAIN_ROUTE_ID;
 
     /**
-     * @dev Minimal amount of tokens per allowed per teleport.
+     * @dev Minimal quantity of tokens allowed per teleport.
      *
      * IMPORTANT: This value MUST be equal or greater than the timechain's existential deposit.
      * see: https://github.com/paritytech/polkadot-sdk/blob/polkadot-v1.17.1/substrate/frame/balances/README.md?plain=1#L24-L29
      */
-    uint256 public immutable MINIMAL_TELEPORT_AMOUNT;
+    uint256 public immutable MINIMAL_TELEPORT_VALUE;
 
     /**
      * @dev Emitted when `amount` tokens are teleported from `source` account in the local network to `recipient` in Timechain.
@@ -119,7 +119,7 @@ contract AnlogTokenV1 is
         GATEWAY = IGateway(gateway);
         REMOTE_ADDRESS = remoteAddr;
         TIMECHAIN_ROUTE_ID = timechainId;
-        MINIMAL_TELEPORT_AMOUNT = minimalTeleport;
+        MINIMAL_TELEPORT_VALUE = minimalTeleport;
         _disableInitializers();
     }
 
@@ -183,7 +183,7 @@ contract AnlogTokenV1 is
      *
      * Requirements:
      * - `to` cannot be the zero address.
-     * - `value` must be equal or greater than `MINIMAL_TELEPORT_AMOUNT`.
+     * - `value` must be equal or greater than `MINIMAL_TELEPORT_VALUE`.
      * - the caller must have a balance of at least `value`.
      *
      * Emits a {OutboundTransfer} event.
@@ -193,7 +193,7 @@ contract AnlogTokenV1 is
     }
 
     /**
-     * @dev Teleports a `value` amount of tokens from `from` account in the local chain to `to` public key
+     * @dev Teleports a `value` amount of tokens from `from` account in the local chain to `to` account
      * in the Timechain using the allowance mechanism. `value` is then deducted from the caller's
      * allowance.
      *
@@ -205,7 +205,7 @@ contract AnlogTokenV1 is
      * Requirements:
      * - `from` and `to` cannot be the zero address.
      * - `from` must have a balance of at least `value`.
-     * - `value` must be equal or greater than `MINIMAL_TELEPORT_AMOUNT`.
+     * - `value` must be equal or greater than `MINIMAL_TELEPORT_VALUE`.
      * - the caller must have allowance for ``from``'s tokens of at least
      * `value`.
      *
@@ -218,29 +218,30 @@ contract AnlogTokenV1 is
     }
 
     /**
-     * @dev Teleport tokens from `msg.sender` to `recipient` account at Timechain.
+     * @dev Teleports a `value` amount of tokens from `from` account in the local chain to `to` account
+     * in the Timechain.
      *
      * Requirements:
+     * - `from` and `to` cannot be the zero address.
      * - `from` must have a balance of at least `value`.
-     * - `to` cannot be the zero address.
-     * - `value` must be equal or greater than `MINIMAL_TELEPORT_AMOUNT`.
+     * - `value` must be equal or greater than `MINIMAL_TELEPORT_VALUE`.
      *
      * Emits a {OutboundTransfer} event.
      */
-    function _teleportFrom(address from, bytes32 to, uint256 amount) private returns (bytes32 messageID) {
+    function _teleportFrom(address from, bytes32 to, uint256 value) private returns (bytes32 messageID) {
         if (from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
         if (to == address(0)) {
             revert ERC20InvalidReceiver(address(0));
         }
-        require(amount >= MINIMAL_TELEPORT_AMOUNT, "amount below minimum required");
-        _burn(from, amount);
-        bytes memory message = abi.encode(OutboundTeleportCommand({from: from, to: to, amount: amount}));
+        require(value >= MINIMAL_TELEPORT_VALUE, "value below minimum required");
+        _burn(from, value);
+        bytes memory message = abi.encode(OutboundTeleportCommand({from: from, to: to, amount: value}));
         messageID = GATEWAY.submitMessage{value: _msgValue()}(
             address(REMOTE_ADDRESS), TIMECHAIN_ROUTE_ID, INBOUND_TRANSFER_GAS_LIMIT, message
         );
-        emit OutboundTransfer(messageID, from, to, amount);
+        emit OutboundTransfer(messageID, from, to, value);
     }
 
     /**
