@@ -33,9 +33,9 @@ contract AnlogTokenV1 is
     bytes32 public constant UNPAUSER_ROLE = keccak256("UNPAUSER_ROLE");
 
     /**
-     * @dev Length of `TeleportCommand` struct encoded in bytes.
+     * @dev Length of `OutboundTeleportCommand` struct encoded in bytes.
      * ```
-     * uint256 messageLength = abi.encode(TeleportCommand({from: address(0), to: address(0), amount: 0})).length;
+     * uint256 messageLength = abi.encode(OutboundTeleportCommand({from: address(0), to: bytes32(0), amount: 0})).length;
      * ```
      */
     uint256 public constant TELEPORT_COMMAND_ENCODED_LEN = 96;
@@ -46,7 +46,8 @@ contract AnlogTokenV1 is
     uint256 public constant INBOUND_TRANSFER_GAS_LIMIT = 100_000;
 
     /**
-     * @dev Address of Analog Gateway deployed in the local network, work as "broker" to teleport funds.
+     * @dev Address of Analog Gateway deployed in the local network, work as "broker" to exchange messages,
+     *      between this contract and the Timechain.
      *
      * References:
      * - Protocol Overview: https://docs.analog.one/documentation/developers/analog-gmp
