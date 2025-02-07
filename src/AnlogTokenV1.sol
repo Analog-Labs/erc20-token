@@ -84,13 +84,10 @@ contract AnlogTokenV1 is
     event InboundTransfer(bytes32 indexed id, bytes32 indexed source, address indexed recipient, uint256 amount);
 
     /**
-     * @dev The preconditions of `onGmpReceived` method were not met.
+     * @dev One or more preconditions of `onGmpReceived` method failed.
      */
     error Unauthorized();
 
-    /**
-     * @dev Command that will be encoded in the `data` field on the `onGmpReceived` method.
-     */
     /**
      * @dev Command encoded in the `data` field on the `onGmpReceived` method, representing a teleport from Timechain to the local network.
      * @param from Timechain's account teleporting the tokens.
