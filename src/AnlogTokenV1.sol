@@ -53,16 +53,19 @@ contract AnlogTokenV1 is
      * - Protocol Overview: https://docs.analog.one/documentation/developers/analog-gmp
      * - Gateway source-code: https://github.com/Analog-Labs/analog-gmp
      */
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     IGateway public immutable GATEWAY;
 
     /**
      * @dev Address of the contract or pallet that will handle the GMP message in the remote network.
      */
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address public immutable REMOTE_ADDRESS;
 
     /**
      * @dev Timechain's Route ID, this is the unique identifier of Timechain's network.
      */
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     uint16 public immutable TIMECHAIN_ROUTE_ID;
 
     /**
@@ -71,6 +74,7 @@ contract AnlogTokenV1 is
      * IMPORTANT: This value MUST be equal or greater than the timechain's existential deposit.
      * see: https://github.com/paritytech/polkadot-sdk/blob/polkadot-v1.17.1/substrate/frame/balances/README.md?plain=1#L24-L29
      */
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     uint256 public immutable MINIMAL_TELEPORT_VALUE;
 
     /**
@@ -232,7 +236,7 @@ contract AnlogTokenV1 is
         if (from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
-        if (to == address(0)) {
+        if (to == bytes32(bytes20(address(0)))) {
             revert ERC20InvalidReceiver(address(0));
         }
         require(value >= MINIMAL_TELEPORT_VALUE, "value below minimum required");
