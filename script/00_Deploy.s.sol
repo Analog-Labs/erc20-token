@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
+import {Upgrades, Options} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {AnlogTokenV1} from "../src/AnlogTokenV1.sol";
 
 contract AnlogTokenScript is Script {
@@ -18,10 +18,19 @@ contract AnlogTokenScript is Script {
         address pauser = vm.envAddress("PAUSER");
         address unpauser = vm.envAddress("UNPAUSER");
 
+        // Teleport-related
+        address gateway = vm.envAddress("GATEWAY");
+        address remoteAddr = vm.envAddress("REMOTE_ADDRESS");
+        uint16 timechainId = uint16(vm.envUint("TIMECHAIN_ROUTE_ID"));
+        uint256 minimalTeleport = vm.envUint("MINIMAL_TELEPORT_VALUE");
+
         vm.startBroadcast(deployer);
 
+        Options memory opts;
+        opts.constructorData = abi.encode(gateway, remoteAddr, timechainId, minimalTeleport);
+
         address proxyAddress = Upgrades.deployUUPSProxy(
-            "AnlogTokenV1.sol", abi.encodeCall(AnlogTokenV1.initialize, (minter, upgrader, pauser, unpauser))
+            "AnlogTokenV1.sol", abi.encodeCall(AnlogTokenV1.initialize, (minter, upgrader, pauser, unpauser)), opts
         );
 
         vm.stopBroadcast();
