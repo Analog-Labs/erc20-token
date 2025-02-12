@@ -17,8 +17,8 @@ import {IGateway} from "@analog-gmp/interfaces/IGateway.sol";
 /// @notice V1: Roles Model implementation of upgradable ERC20 token.
 /// This to be used as the initial implementation of UUPS proxy.
 /// If an upgrade from V0 to V1 is needed,
-/// AnlogTokenV1Upgrade should be used instead.
-contract AnlogTokenV1 is
+/// AnlogTokenV2Upgrade should be used instead.
+contract AnlogTokenV2 is
     Initializable,
     ERC20Upgradeable,
     ERC20BurnableUpgradeable,

@@ -5,13 +5,13 @@ import {Test, console} from "forge-std/Test.sol";
 import {Upgrades, Options} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
-import {AnlogTokenV1} from "../src/AnlogTokenV1.sol";
+import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
 /// Hence we keep these few basic tests here more as a boilerplate for
 /// the future tests for custom added fetaures.
-contract AnlogTokenV1Test is Test {
-    AnlogTokenV1 public token;
+contract AnlogTokenV2Test is Test {
+    AnlogTokenV2 public token;
 
     address constant MINTER = address(0);
     address constant UPGRADER = address(1);
@@ -41,9 +41,9 @@ contract AnlogTokenV1Test is Test {
 
         // deploy proxy with a distinct address assigned to each role
         address proxy = Upgrades.deployUUPSProxy(
-            "AnlogTokenV1.sol", abi.encodeCall(AnlogTokenV1.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER)), opts
+            "AnlogTokenV2.sol", abi.encodeCall(AnlogTokenV2.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER)), opts
         );
-        token = AnlogTokenV1(proxy);
+        token = AnlogTokenV2(proxy);
     }
 
     modifier preMint(address to, uint256 amount) {
