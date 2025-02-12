@@ -57,12 +57,6 @@ contract AnlogTokenV1 is
     IGateway public immutable GATEWAY;
 
     /**
-     * @dev Address of the contract or pallet that will handle the GMP message in the remote network.
-     */
-    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
-    address public immutable REMOTE_ADDRESS;
-
-    /**
      * @dev Timechain's Route ID, this is the unique identifier of Timechain's network.
      */
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
@@ -117,11 +111,10 @@ contract AnlogTokenV1 is
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(address gateway, address remoteAddr, uint16 timechainId, uint256 minimalTeleport) {
+    constructor(address gateway, uint16 timechainId, uint256 minimalTeleport) {
         require(gateway.code.length > 0, "Gateway address is not a contract");
         require(IGateway(gateway).networkId() != timechainId, "local network and Timechain must be different networks");
         GATEWAY = IGateway(gateway);
-        REMOTE_ADDRESS = remoteAddr;
         TIMECHAIN_ROUTE_ID = timechainId;
         MINIMAL_TELEPORT_VALUE = minimalTeleport;
         _disableInitializers();
@@ -243,7 +236,7 @@ contract AnlogTokenV1 is
         _burn(from, value);
         bytes memory message = abi.encode(OutboundTeleportCommand({from: from, to: to, amount: value}));
         messageID = GATEWAY.submitMessage{value: _msgValue()}(
-            address(REMOTE_ADDRESS), TIMECHAIN_ROUTE_ID, INBOUND_TRANSFER_GAS_LIMIT, message
+            address(0), TIMECHAIN_ROUTE_ID, INBOUND_TRANSFER_GAS_LIMIT, message
         );
         emit OutboundTransfer(messageID, from, to, value);
     }
@@ -261,7 +254,6 @@ contract AnlogTokenV1 is
      *
      * @param id The global unique identifier of the message.
      * @param network The unique identifier of the source chain who send the message
-     * @param source The pubkey/address of who sent the GMP message
      * @param payload The message payload with no specified format
      * @return 32 byte result which will be stored together with GMP message
      *
@@ -273,7 +265,7 @@ contract AnlogTokenV1 is
      *
      * Emits a {InboundTransfer} event.
      */
-    function onGmpReceived(bytes32 id, uint128 network, bytes32 source, bytes calldata payload)
+    function onGmpReceived(bytes32 id, uint128 network, bytes32, bytes calldata payload)
         external
         payable
         returns (bytes32)
@@ -281,7 +273,6 @@ contract AnlogTokenV1 is
         // Check preconditions
         require(msg.sender == address(GATEWAY), Unauthorized());
         require(network == TIMECHAIN_ROUTE_ID, Unauthorized());
-        require(source == bytes32(uint256(uint160(REMOTE_ADDRESS))), Unauthorized());
 
         // Decode the command
         InboundTeleportCommand memory command = abi.decode(payload, (InboundTeleportCommand));

@@ -20,14 +20,13 @@ contract AnlogTokenScript is Script {
 
         // Teleport-related
         address gateway = vm.envAddress("GATEWAY");
-        address remoteAddr = vm.envAddress("REMOTE_ADDRESS");
         uint16 timechainId = uint16(vm.envUint("TIMECHAIN_ROUTE_ID"));
         uint256 minimalTeleport = vm.envUint("MINIMAL_TELEPORT_VALUE");
 
         vm.startBroadcast(deployer);
 
         Options memory opts;
-        opts.constructorData = abi.encode(gateway, remoteAddr, timechainId, minimalTeleport);
+        opts.constructorData = abi.encode(gateway, timechainId, minimalTeleport);
 
         address proxyAddress = Upgrades.deployUUPSProxy(
             "AnlogTokenV1.sol", abi.encodeCall(AnlogTokenV1.initialize, (minter, upgrader, pauser, unpauser)), opts
