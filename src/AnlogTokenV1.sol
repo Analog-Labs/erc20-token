@@ -53,16 +53,13 @@ contract AnlogTokenV1 is
      * - Protocol Overview: https://docs.analog.one/documentation/developers/analog-gmp
      * - Gateway source-code: https://github.com/Analog-Labs/analog-gmp
      */
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     IGateway public immutable GATEWAY;
-
-    /**
-     * @dev Address of the contract or pallet that will handle the GMP message in the remote network.
-     */
-    address public immutable REMOTE_ADDRESS;
 
     /**
      * @dev Timechain's Route ID, this is the unique identifier of Timechain's network.
      */
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     uint16 public immutable TIMECHAIN_ROUTE_ID;
 
     /**
@@ -71,6 +68,7 @@ contract AnlogTokenV1 is
      * IMPORTANT: This value MUST be equal or greater than the timechain's existential deposit.
      * see: https://github.com/paritytech/polkadot-sdk/blob/polkadot-v1.17.1/substrate/frame/balances/README.md?plain=1#L24-L29
      */
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     uint256 public immutable MINIMAL_TELEPORT_VALUE;
 
     /**
@@ -113,11 +111,10 @@ contract AnlogTokenV1 is
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(address gateway, address remoteAddr, uint16 timechainId, uint256 minimalTeleport) {
+    constructor(address gateway, uint16 timechainId, uint256 minimalTeleport) {
         require(gateway.code.length > 0, "Gateway address is not a contract");
         require(IGateway(gateway).networkId() != timechainId, "local network and Timechain must be different networks");
         GATEWAY = IGateway(gateway);
-        REMOTE_ADDRESS = remoteAddr;
         TIMECHAIN_ROUTE_ID = timechainId;
         MINIMAL_TELEPORT_VALUE = minimalTeleport;
         _disableInitializers();
@@ -232,14 +229,14 @@ contract AnlogTokenV1 is
         if (from == address(0)) {
             revert ERC20InvalidSender(address(0));
         }
-        if (to == address(0)) {
+        if (to == bytes32(bytes20(address(0)))) {
             revert ERC20InvalidReceiver(address(0));
         }
         require(value >= MINIMAL_TELEPORT_VALUE, "value below minimum required");
         _burn(from, value);
         bytes memory message = abi.encode(OutboundTeleportCommand({from: from, to: to, amount: value}));
         messageID = GATEWAY.submitMessage{value: _msgValue()}(
-            address(REMOTE_ADDRESS), TIMECHAIN_ROUTE_ID, INBOUND_TRANSFER_GAS_LIMIT, message
+            address(0), TIMECHAIN_ROUTE_ID, INBOUND_TRANSFER_GAS_LIMIT, message
         );
         emit OutboundTransfer(messageID, from, to, value);
     }
@@ -257,7 +254,6 @@ contract AnlogTokenV1 is
      *
      * @param id The global unique identifier of the message.
      * @param network The unique identifier of the source chain who send the message
-     * @param source The pubkey/address of who sent the GMP message
      * @param payload The message payload with no specified format
      * @return 32 byte result which will be stored together with GMP message
      *
@@ -269,7 +265,7 @@ contract AnlogTokenV1 is
      *
      * Emits a {InboundTransfer} event.
      */
-    function onGmpReceived(bytes32 id, uint128 network, bytes32 source, bytes calldata payload)
+    function onGmpReceived(bytes32 id, uint128 network, bytes32, bytes calldata payload)
         external
         payable
         returns (bytes32)
@@ -277,7 +273,6 @@ contract AnlogTokenV1 is
         // Check preconditions
         require(msg.sender == address(GATEWAY), Unauthorized());
         require(network == TIMECHAIN_ROUTE_ID, Unauthorized());
-        require(source == bytes32(uint256(uint160(REMOTE_ADDRESS))), Unauthorized());
 
         // Decode the command
         InboundTeleportCommand memory command = abi.decode(payload, (InboundTeleportCommand));
