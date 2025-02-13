@@ -55,9 +55,7 @@ contract UpgradeV0V1Test is Test {
 
     function test_preUpgrade() public preUpgrade(address(this), MINT_AMOUNT1) {}
 
-    function test_Upgrade() public upgrade {
-        assert(false);
-    }
+    function test_Upgrade() public upgrade {}
 
     function test_postUpgrade() public preUpgrade(address(this), MINT_AMOUNT1) upgrade {
         // Total Supply SHOULD NOT change

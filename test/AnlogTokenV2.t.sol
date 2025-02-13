@@ -57,8 +57,8 @@ contract AnlogTokenV2Test is Test {
     uint256 private constant SIGNING_NONCE = 0x69;
 
     /// @notice deploys an UUPS proxy.
-    /// Here we start with the V1 implementation right away.
-    /// For V0->V1 upgrade see another test.
+    /// Here we start with the V2 implementation right away.
+    /// For V1->V2 upgrade see another test.
     function setUp() public {
         sepoliaFork = vm.createFork(SEPOLIA_RPC_URL);
         vm.selectFork(sepoliaFork);

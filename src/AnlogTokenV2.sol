@@ -118,7 +118,6 @@ contract AnlogTokenV2 is
         _disableInitializers();
     }
 
-    /// @dev this does not change anything from V1, and thus should ONLY be used in tests
     function initialize(address minter, address upgrader, address pauser, address unpauser) public initializer {
         __ERC20_init("Wrapped Analog One Token", "WANLOG");
         __ERC20Burnable_init();
