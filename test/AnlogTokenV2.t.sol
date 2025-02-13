@@ -160,4 +160,15 @@ contract AnlogTokenV2Test is Test {
         );
         token.unpause();
     }
+
+    function test_TeleportOut_Below_ED() public preMint(address(this), 15_000) {
+        bytes32 dest = bytes32(bytes20(UPGRADER));
+        vm.expectRevert("value below minimum required");
+        token.teleport(dest, 15_000);
+    }
+
+    function test_TeleportOut() public preMint(address(this), 15_000) {
+        bytes32 dest = bytes32(bytes20(UPGRADER));
+        token.teleport(dest, 15_000);
+    }
 }
