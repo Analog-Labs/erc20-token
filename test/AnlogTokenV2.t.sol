@@ -8,7 +8,7 @@ import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol"
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
 
-import {Gateway, Route, NetworkID, ERC1967} from "analog-gmp/src/Gateway.sol";
+import {IGateway, Gateway, Route, NetworkID, ERC1967} from "analog-gmp/src/Gateway.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
 /// Hence we keep these few basic tests here more as a boilerplate for
@@ -186,11 +186,29 @@ contract AnlogTokenV2Test is Test {
     }
 
     function test_TeleportOut_Low_Value() public preMint(address(this), MIN_TELEPORT_VAL) setRoute {
-        bytes32 dest = bytes32(bytes20(UPGRADER));
+        bytes32 dest = bytes32(bytes20(uint160(UPGRADER)));
 
         vm.expectEmit(address(token));
         emit IERC20.Transfer(address(this), address(0), MIN_TELEPORT_VAL);
         vm.expectRevert("insufficient tx value");
         token.teleport(dest, MIN_TELEPORT_VAL);
+    }
+
+    function test_TeleportOut() public preMint(address(this), MIN_TELEPORT_VAL) setRoute {
+        bytes32 dest = bytes32(uint256(uint160(UPGRADER)));
+        uint256 cost = token.estimateTeleportCost();
+
+        vm.expectEmit(address(token));
+        emit IERC20.Transfer(address(this), address(0), MIN_TELEPORT_VAL);
+
+        bytes memory message;
+        bytes32 sender;
+        vm.expectEmit(false, false, true, false, address(GATEWAY));
+        emit IGateway.GmpCreated(0, sender, address(0), TIMECHAIN_ID, 0, 0, 1, message);
+
+        vm.expectEmit(false, true, true, true, address(token));
+        emit AnlogTokenV2.OutboundTransfer(0, address(this), dest, MIN_TELEPORT_VAL);
+
+        token.teleport{value: cost}(dest, MIN_TELEPORT_VAL);
     }
 }
