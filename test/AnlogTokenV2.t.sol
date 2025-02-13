@@ -5,7 +5,10 @@ import {Test, console} from "forge-std/Test.sol";
 import {Upgrades, Options} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
+
+import {Gateway, Route, NetworkID, ERC1967} from "analog-gmp/src/Gateway.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
 /// Hence we keep these few basic tests here more as a boilerplate for
@@ -21,6 +24,11 @@ contract AnlogTokenV2Test is Test {
 
     // Teleport-related
     address constant GATEWAY = 0xEb73D0D236DE8F8D09dc6A52916e5849ff1E8dfA;
+    // ERC-1967 storage slot for admin address:
+    // 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
+    // Can be queried with
+    // cast storage 0xEb73D0D236DE8F8D09dc6A52916e5849ff1E8dfA 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103 -r $SEPOLIA_RPC_URL
+    address constant GW_ADMIN = 0x38a78edA59AC73A95281Cb009A5EF986e320509F;
     uint16 constant TIMECHAIN_ID = 1000;
     uint256 constant MIN_TELEPORT_VAL = 1000000000000;
 
@@ -44,6 +52,16 @@ contract AnlogTokenV2Test is Test {
             "AnlogTokenV2.sol", abi.encodeCall(AnlogTokenV2.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER)), opts
         );
         token = AnlogTokenV2(proxy);
+    }
+
+    modifier setRoute() {
+        Route memory route = Route(NetworkID.wrap(1000), 15_000_000, 0, bytes32(bytes20(address(42))), 1, 1);
+        address payable gw = payable(GATEWAY);
+
+        vm.prank(GW_ADMIN);
+        Gateway(gw).setRoute(route);
+
+        _;
     }
 
     modifier preMint(address to, uint256 amount) {
@@ -161,14 +179,18 @@ contract AnlogTokenV2Test is Test {
         token.unpause();
     }
 
-    function test_TeleportOut_Below_ED() public preMint(address(this), 15_000) {
+    function test_TeleportOut_Below_ED() public preMint(address(this), MIN_TELEPORT_VAL - 1) {
         bytes32 dest = bytes32(bytes20(UPGRADER));
         vm.expectRevert("value below minimum required");
-        token.teleport(dest, 15_000);
+        token.teleport(dest, MIN_TELEPORT_VAL - 1);
     }
 
-    function test_TeleportOut() public preMint(address(this), 15_000) {
+    function test_TeleportOut_Low_Value() public preMint(address(this), MIN_TELEPORT_VAL) setRoute {
         bytes32 dest = bytes32(bytes20(UPGRADER));
-        token.teleport(dest, 15_000);
+
+        vm.expectEmit(address(token));
+        emit IERC20.Transfer(address(this), address(0), MIN_TELEPORT_VAL);
+        vm.expectRevert("insufficient tx value");
+        token.teleport(dest, MIN_TELEPORT_VAL);
     }
 }
