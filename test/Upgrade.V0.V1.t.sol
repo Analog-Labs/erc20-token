@@ -18,8 +18,8 @@ contract UpgradeV0V1Test is Test {
     address constant PAUSER = address(2);
     address constant UNPAUSER = address(3);
 
-    uint256 constant mint_amount1 = 100_000;
-    uint256 constant mint_amount2 = 50_000;
+    uint256 constant MINT_AMOUNT1 = 100_000;
+    uint256 constant MINT_AMOUNT2 = 50_000;
 
     /// @notice deploys an UUPS proxy.
     /// Here we start with the V0 implementation
@@ -35,7 +35,7 @@ contract UpgradeV0V1Test is Test {
         // MINTER SHOULD NOT be able to mint yet
         vm.prank(MINTER);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, MINTER));
-        tokenV0.mint(mint_to, mint_amount1);
+        tokenV0.mint(mint_to, MINT_AMOUNT1);
         // OWNER SHOULD be able to mint
         tokenV0.mint(mint_to, 100_000);
         assertEq(tokenV0.totalSupply(), mint_amount);
@@ -53,26 +53,28 @@ contract UpgradeV0V1Test is Test {
         _;
     }
 
-    function test_preUpgrade() public preUpgrade(address(this), mint_amount1) {}
+    function test_preUpgrade() public preUpgrade(address(this), MINT_AMOUNT1) {}
 
-    function test_Upgrade() public upgrade {}
+    function test_Upgrade() public upgrade {
+        assert(false);
+    }
 
-    function test_postUpgrade() public preUpgrade(address(this), mint_amount1) upgrade {
+    function test_postUpgrade() public preUpgrade(address(this), MINT_AMOUNT1) upgrade {
         // Total Supply SHOULD NOT change
-        assertEq(tokenV1.totalSupply(), mint_amount1);
+        assertEq(tokenV1.totalSupply(), MINT_AMOUNT1);
         // Balances SHOULD NOT change
-        assertEq(tokenV0.balanceOf(address(this)), mint_amount1);
+        assertEq(tokenV0.balanceOf(address(this)), MINT_AMOUNT1);
         // OWNER SHOULD NOT be able to mint anymore
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), keccak256("MINTER_ROLE")
             )
         );
-        tokenV1.mint(address(this), mint_amount2);
+        tokenV1.mint(address(this), MINT_AMOUNT2);
         // MINTER SHOULD be able to mint
         vm.prank(MINTER);
-        tokenV1.mint(address(this), mint_amount2);
-        assertEq(tokenV0.totalSupply(), mint_amount1 + mint_amount2);
-        assertEq(tokenV0.balanceOf(address(this)), mint_amount1 + mint_amount2);
+        tokenV1.mint(address(this), MINT_AMOUNT2);
+        assertEq(tokenV0.totalSupply(), MINT_AMOUNT1 + MINT_AMOUNT2);
+        assertEq(tokenV0.balanceOf(address(this)), MINT_AMOUNT1 + MINT_AMOUNT2);
     }
 }
