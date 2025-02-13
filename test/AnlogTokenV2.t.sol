@@ -53,6 +53,7 @@ contract AnlogTokenV2Test is Test {
 
     // Chronicle TSS Secret
     uint256 private constant SECRET = 0x42;
+    address private constant SIGNER_ADDRESS = 0x2e234DAe75C793f67A35089C9d99245E1C58470b;
     uint256 private constant SIGNING_NONCE = 0x69;
 
     /// @notice deploys an UUPS proxy.
@@ -234,26 +235,52 @@ contract AnlogTokenV2Test is Test {
     }
 
     function test_TeleportOut() public preMint(address(this), MIN_TELEPORT_VAL) setRoute {
+        address payable gw = payable(GATEWAY);
         bytes32 dest = bytes32(uint256(uint160(UPGRADER)));
         uint256 cost = token.estimateTeleportCost();
+
+        GmpSender source = GmpSender.wrap(bytes32(uint256(uint160(SIGNER_ADDRESS))));
+
+        AnlogTokenV2.OutboundTeleportCommand memory command =
+            AnlogTokenV2.OutboundTeleportCommand(address(this), dest, MIN_TELEPORT_VAL);
+
+        GmpMessage memory gmp = GmpMessage({
+            source: source,
+            srcNetwork: Gateway(gw).networkId(),
+            dest: address(0),
+            destNetwork: TIMECHAIN_ID,
+            gasLimit: 100_000,
+            nonce: 0,
+            data: abi.encode(command)
+        });
+
+        bytes32 messageID = gmp.eip712hash();
 
         vm.expectEmit(address(token));
         emit IERC20.Transfer(address(this), address(0), MIN_TELEPORT_VAL);
 
-        bytes memory message;
-        bytes32 sender;
-        vm.expectEmit(false, false, true, false, address(GATEWAY));
-        emit IGateway.GmpCreated(0, sender, address(0), TIMECHAIN_ID, 0, 0, 1, message);
+        vm.expectEmit(true, true, true, true, address(GATEWAY));
+        emit IGateway.GmpCreated(
+            messageID,
+            GmpSender.unwrap(gmp.source),
+            gmp.dest,
+            gmp.destNetwork,
+            gmp.gasLimit,
+            179835,
+            gmp.nonce,
+            gmp.data
+        );
 
-        vm.expectEmit(false, true, true, true, address(token));
-        emit AnlogTokenV2.OutboundTransfer(0, address(this), dest, MIN_TELEPORT_VAL);
+        vm.expectEmit(true, true, true, true, address(token));
+        emit AnlogTokenV2.OutboundTransfer(messageID, address(this), dest, MIN_TELEPORT_VAL);
 
         token.teleport{value: cost}(dest, MIN_TELEPORT_VAL);
     }
 
     function test_TeleportIn() public setRoute setShard {
         address payable gw = payable(GATEWAY);
-        GmpSender source;
+        GmpSender source = GmpSender.wrap(bytes32(uint256(uint160(0))));
+
         AnlogTokenV2.InboundTeleportCommand memory command =
             AnlogTokenV2.InboundTeleportCommand(GmpSender.unwrap(source), UPGRADER, MIN_TELEPORT_VAL);
 
