@@ -8,12 +8,27 @@ import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol"
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
 
-import {IGateway, Gateway, Route, NetworkID, ERC1967} from "analog-gmp/src/Gateway.sol";
+import {
+    IGateway,
+    IExecutor,
+    Gateway,
+    Route,
+    NetworkID,
+    ERC1967,
+    TssKey,
+    GmpMessage,
+    Signature
+} from "analog-gmp/src/Gateway.sol";
+import {GmpMessage, PrimitiveUtils, GmpSender, GmpStatus} from "analog-gmp/src/Primitives.sol";
+import {TestUtils, SigningKey, SigningUtils} from "analog-gmp/test/TestUtils.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
 /// Hence we keep these few basic tests here more as a boilerplate for
 /// the future tests for custom added fetaures.
 contract AnlogTokenV2Test is Test {
+    using PrimitiveUtils for GmpMessage;
+    using SigningUtils for SigningKey;
+
     AnlogTokenV2 public token;
 
     address constant MINTER = address(0);
@@ -35,6 +50,10 @@ contract AnlogTokenV2Test is Test {
     // fork testing
     string SEPOLIA_RPC_URL = vm.envString("SEPOLIA_RPC_URL");
     uint256 sepoliaFork;
+
+    // Chronicle TSS Secret
+    uint256 private constant SECRET = 0x42;
+    uint256 private constant SIGNING_NONCE = 0x69;
 
     /// @notice deploys an UUPS proxy.
     /// Here we start with the V1 implementation right away.
@@ -64,6 +83,19 @@ contract AnlogTokenV2Test is Test {
         _;
     }
 
+    modifier setShard() {
+        Route memory route = Route(NetworkID.wrap(1000), 15_000_000, 0, bytes32(bytes20(address(42))), 1, 1);
+        address payable gw = payable(GATEWAY);
+
+        SigningKey memory signer = TestUtils.createSigner(SECRET);
+        TssKey memory shardKey = TssKey({yParity: signer.yParity() == 28 ? 3 : 2, xCoord: signer.xCoord()});
+
+        vm.prank(GW_ADMIN);
+        Gateway(gw).setShard(shardKey);
+
+        _;
+    }
+
     modifier preMint(address to, uint256 amount) {
         assertEq(token.totalSupply(), 0);
         vm.prank(MINTER);
@@ -77,6 +109,13 @@ contract AnlogTokenV2Test is Test {
         vm.prank(PAUSER);
         token.pause();
         _;
+    }
+
+    function sign(GmpMessage memory gmp) internal pure returns (Signature memory) {
+        bytes32 hash = gmp.eip712hash();
+        SigningKey memory signer = TestUtils.createSigner(SECRET);
+        (uint256 e, uint256 s) = signer.signPrehashed(hash, SIGNING_NONCE);
+        return Signature({xCoord: signer.xCoord(), e: e, s: s});
     }
 
     function test_name_and_ticker() public view {
@@ -210,5 +249,36 @@ contract AnlogTokenV2Test is Test {
         emit AnlogTokenV2.OutboundTransfer(0, address(this), dest, MIN_TELEPORT_VAL);
 
         token.teleport{value: cost}(dest, MIN_TELEPORT_VAL);
+    }
+
+    function test_TeleportIn() public setRoute setShard {
+        address payable gw = payable(GATEWAY);
+        GmpSender source;
+        AnlogTokenV2.InboundTeleportCommand memory command =
+            AnlogTokenV2.InboundTeleportCommand(GmpSender.unwrap(source), UPGRADER, MIN_TELEPORT_VAL);
+
+        GmpMessage memory gmp = GmpMessage({
+            source: source,
+            srcNetwork: TIMECHAIN_ID,
+            dest: address(token),
+            destNetwork: Gateway(gw).networkId(),
+            gasLimit: 100_000,
+            nonce: 0,
+            data: abi.encode(command)
+        });
+
+        assertEq(token.totalSupply(), 0);
+
+        Signature memory sig = sign(gmp);
+        bytes32 messageID = gmp.eip712hash();
+
+        vm.expectEmit(true, true, true, true, GATEWAY);
+        emit IExecutor.GmpExecuted(messageID, gmp.source, gmp.dest, GmpStatus.SUCCESS, bytes32(MIN_TELEPORT_VAL));
+
+        Gateway(gw).execute(sig, gmp);
+        assertTrue(Gateway(gw).gmpInfo(messageID).status == GmpStatus.SUCCESS, "failed to execute GMP message");
+
+        assertEq(token.balanceOf(UPGRADER), MIN_TELEPORT_VAL);
+        assertEq(token.totalSupply(), MIN_TELEPORT_VAL);
     }
 }
