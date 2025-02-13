@@ -2,16 +2,16 @@
 pragma solidity ^0.8.22;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
+import {Upgrades, Options} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
-import {AnlogTokenV1} from "../src/AnlogTokenV1.sol";
+import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
 /// Hence we keep these few basic tests here more as a boilerplate for
 /// the future tests for custom added fetaures.
-contract AnlogTokenV1Test is Test {
-    AnlogTokenV1 public token;
+contract AnlogTokenV2Test is Test {
+    AnlogTokenV2 public token;
 
     address constant MINTER = address(0);
     address constant UPGRADER = address(1);
@@ -19,15 +19,31 @@ contract AnlogTokenV1Test is Test {
     address constant UNPAUSER = address(3);
     address constant NEW_MINTER = address(4);
 
+    // Teleport-related
+    address constant GATEWAY = 0xEb73D0D236DE8F8D09dc6A52916e5849ff1E8dfA;
+    uint16 constant TIMECHAIN_ID = 1000;
+    uint256 constant MIN_TELEPORT_VAL = 1000000000000;
+
+    // fork testing
+    string SEPOLIA_RPC_URL = vm.envString("SEPOLIA_RPC_URL");
+    uint256 sepoliaFork;
+
     /// @notice deploys an UUPS proxy.
     /// Here we start with the V1 implementation right away.
     /// For V0->V1 upgrade see another test.
     function setUp() public {
+        sepoliaFork = vm.createFork(SEPOLIA_RPC_URL);
+        vm.selectFork(sepoliaFork);
+        assertEq(vm.activeFork(), sepoliaFork);
+
+        Options memory opts;
+        opts.constructorData = abi.encode(GATEWAY, TIMECHAIN_ID, MIN_TELEPORT_VAL);
+
         // deploy proxy with a distinct address assigned to each role
         address proxy = Upgrades.deployUUPSProxy(
-            "AnlogTokenV1.sol", abi.encodeCall(AnlogTokenV1.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER))
+            "AnlogTokenV2.sol", abi.encodeCall(AnlogTokenV2.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER)), opts
         );
-        token = AnlogTokenV1(proxy);
+        token = AnlogTokenV2(proxy);
     }
 
     modifier preMint(address to, uint256 amount) {

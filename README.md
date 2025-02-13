@@ -78,7 +78,7 @@ Load environment variables and run the deployment script:
 
 ``` sh
 source .env.anvil
-forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
+forge script script/00_Deploy.V1.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
 
 It will ask you to enter the private key. As we're using Anvil's default `account (0)` as the deployer (specified in the [`.env.anvil`](./.env.anvil)), use its (**!well-known!**) key here (can be found in Anvil logs). 
@@ -106,7 +106,7 @@ Deploy:
 
 ``` sh
 source .env.sepolia
-forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
+forge script script/00_Deploy.V1.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
 
 Make sure to provide the private key of the `DEPLOYER` account upon script's interactive prompt.
@@ -120,13 +120,13 @@ Make sure to provide the private key of the `DEPLOYER` account upon script's int
 Once steps described above taken and succeed, deploy to Sepolia with:
 
 ``` sh
-forge script script/00_Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast -i 1
+forge script script/00_Deploy.V1.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast -i 1
 ```
 
 > [!NOTE]  
 > You can also use hardware wallet for signing the transaction. E.g. for using with _Ledger_ run: 
 > ```sh 
-> forge script script/00_Deploy.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -l
+> forge script script/00_Deploy.V1.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -l
 > ```
 
 ##### Verify 
