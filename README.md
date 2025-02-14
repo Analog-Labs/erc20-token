@@ -3,7 +3,7 @@
 > While this upgradeable token smart contract is built using [audited OZ libraries](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v5.2.0/audits),  
 > **this particular implementation has not yet underwent any security audits. Use at your own risk.**
 
-# $ANLOG ERC20 Token 
+# `$WANLOG`: Wrapped `ANLOG` ERC20 Token 
 
 ## Initial Requirements
 
@@ -49,16 +49,8 @@ This project is built with the [Foundry](https://book.getfoundry.sh/) framework.
 
 ## Testing 
 
-If changed some contract, run this first:
-
 ``` sh
-forge fmt && forge clean && forge build
-```
-
-Then run tests: 
-
-``` sh
-forge test
+forge fmt && forge clean && forge tests
 ```
 
 ## Deployment 
@@ -68,16 +60,21 @@ forge test
 <details>
 <summary>Expand me</summary>
 
-Spin out a default [Anvil](https://book.getfoundry.sh/anvil/) node:
-
-``` sh
-anvil -p 9545
-```
-
-Load environment variables and run the deployment script:
+Load environment variables:
 
 ``` sh
 source .env.anvil
+```
+
+Spin out an [Anvil](https://book.getfoundry.sh/anvil/) fork of Sepolia:
+
+``` sh
+anvil -f $SEPOLIA_RPC_URL -p $ANVIL_PORT 
+```
+
+Run the deployment script:
+
+``` sh
 forge script script/00_Deploy.V1.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
 ```
 
@@ -85,37 +82,15 @@ It will ask you to enter the private key. As we're using Anvil's default `accoun
 
 </details>
 
-### To Sepolia testnet 
+### To Sepolia
 
-> [!IMPORTANT]  
-> You need to setup environment first, see [`.env.sepolia.example`](./.env.sepolia.example)
-
-#### Dry-run on Fork 
-
-<details>
-<summary>Expand me</summary>
-
-Spin out an Anvil fork of Sepolia network:
+Load environment variables:
 
 ``` sh
 source .env.sepolia
-anvil -f $SEPOLIA_RPC_URL -p 9545
 ```
 
-Deploy: 
-
-``` sh
-source .env.sepolia
-forge script script/00_Deploy.V1.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
-```
-
-Make sure to provide the private key of the `DEPLOYER` account upon script's interactive prompt.
-</details>
-
-
-#### Real run on Sepolia 
-
-##### Deploy 
+#### Deploy 
 
 Once steps described above taken and succeed, deploy to Sepolia with:
 
@@ -129,7 +104,7 @@ forge script script/00_Deploy.V1.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast -i
 > forge script script/00_Deploy.V1.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -l
 > ```
 
-##### Verify 
+#### Verify 
 
 Figure out `solc` version used to compile the contracts: 
 
@@ -153,37 +128,46 @@ forge v --verifier etherscan --compiler-version=<solc_version> \
 src/AnlogTokenV1.sol:AnlogTokenV1
 ```
 
-### Upgrade instructions
+## Upgrade
 
 > [!NOTE]
-> Commands below are given for the setting when you upgrade from `V0` to `V1Upgrade`. See [`Upgrade.V0.V1.t.sol`](test/Upgrade.V0.V1.t.sol) for the reference.
+> Commands below are given for the setting when you upgrade from `V1` to `V2`. 
+> Also see [`Upgrade.V1.V2.t.sol` test](test/Upgrade.V0.V1.t.sol) for the reference.
+
+*Prerequisites*: you have `V1` deployed.
+
+### Locally to Anvil 
+
+<details>
+<summary>Expand me</summary>
+
+Load environment variables:
+
+``` sh
+source .env.anvil
+```
+
+First spin out a local anvil and deploy `V1` to it by following instructions above.
+
+Then set `PROXY` environment variable to the address of the deployed proxy.
+
+Then run `V1.V2` upgrade script:
+
+``` sh
+forge script script/01_Upgrade.V1.V2.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
+```
+
+It will ask you to enter the private key. As we're using Anvil's default `account (2)` as the `UPGRADER` (specified in the [`.env.anvil`](./.env.anvil)), use its (**!well-known!**) key here (can be found in Anvil logs). 
+
+</details>
 
 
-Let say you have deployed proxy and `V0` implementation contract for it.  
-To upgrade the implementation contract to `V1Upgrade`:
+### To Sepolia 
 
-1. Deploy `V1Upgrade`:
+In a live network, most probably a multisig is used for the `UPGRADER` account. Thus for doing an upgrade, 
 
-   ``` sh
-   source .env.sepolia
-   forge create --constructor-args=0x,0x,0x,0x \
-   --rpc-url $SEPOLIA_RPC_URL \
-   --from $DEPLOYER \
-   test/mock/AnlogTokenV1Upgrade.sol:AnlogTokenV1Upgrade -i --broadcast 
-   ```
+dispatch the call to  [`upgradeToAndCall(address,bytes)`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/332bcb5f4d9cf0ae0f98fe91c77d9c1fb9951506/contracts/proxy/ERC1967/ERC1967Utils.sol#L67), providing the following args:
 
-   **NOTE** that we provided `0x,0x,0x,0x` to the constructor args. That is because we don't care on the values of the implementation contract storage. The proxy storage will be updated in the following `initialize()` call right after the upgrade.
-
-2. Prepare `calldata` for `V1Upgrade` initializer:
-
-   ```sh
-   source .env.sepolia
-   cast cd "initialize(address,address,address,address)()" $MINTER $UPGRADER $PAUSER $UNPAUSER
-   ``` 
-   You should get hex-encoded `calldata` as the result.
-
-3. Dispatch the call to  [`upgradeToAndCall(address,bytes)`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/332bcb5f4d9cf0ae0f98fe91c77d9c1fb9951506/contracts/proxy/ERC1967/ERC1967Utils.sol#L67), providing the following args:
-
-      - **address**: current (`V0`) implementation contract address;
-      - **bytes**: `calldata` for the `V1Upgrade` implementation contract initializer 
-        (the one you've got on the previous step).
+      - **address**: current (`V1`) implementation contract address;
+      - **bytes**: (empty) (this is `calldata` for the `V2` implementation contract initializer, which we don't need for this upgrade).
+        **note** for the cases when you need it, look at this [commit](https://github.com/Analog-Labs/erc20-token/blob/2c6025e8099966194ed006c25f1a79b5cabfa0df/README.md#upgrade-instructions) for the instructions of how to calculate it.

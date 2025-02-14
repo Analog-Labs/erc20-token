@@ -14,10 +14,8 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IGmpReceiver} from "@analog-gmp/interfaces/IGmpReceiver.sol";
 import {IGateway} from "@analog-gmp/interfaces/IGateway.sol";
 
-/// @notice V1: Roles Model implementation of upgradable ERC20 token.
-/// This to be used as the initial implementation of UUPS proxy.
-/// If an upgrade from V0 to V1 is needed,
-/// AnlogTokenV2Upgrade should be used instead.
+/// @notice V2: Teleportable Wrapped Analog ERC20 token.
+/// @custom:oz-upgrades-from AnlogTokenV1
 contract AnlogTokenV2 is
     Initializable,
     ERC20Upgradeable,

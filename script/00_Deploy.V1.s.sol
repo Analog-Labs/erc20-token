@@ -5,7 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {AnlogTokenV1} from "../src/AnlogTokenV1.sol";
 
-contract AnlogTokenScript is Script {
+contract AnlogTokenV1DeploymentScript is Script {
     AnlogTokenV1 public token;
 
     function setUp() public {}
