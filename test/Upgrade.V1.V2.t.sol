@@ -18,8 +18,8 @@ contract UpgradeV1V2Test is Test {
     address constant PAUSER = address(2);
     address constant UNPAUSER = address(3);
 
-    uint256 constant mint_amount1 = 100_000;
-    uint256 constant mint_amount2 = 50_000;
+    uint256 constant MINT_AMOUNT1 = 100_000;
+    uint256 constant MINT_AMOUNT2 = 50_000;
 
     // V2 immutables
     address constant GATEWAY = 0xEb73D0D236DE8F8D09dc6A52916e5849ff1E8dfA;
@@ -73,26 +73,20 @@ contract UpgradeV1V2Test is Test {
         _;
     }
 
-    function test_preUpgrade() public preUpgrade(address(this), mint_amount1) {}
+    function test_preUpgrade() public preUpgrade(address(this), MINT_AMOUNT1) {}
 
     function test_Upgrade() public upgrade {}
 
-    // function test_postUpgrade() public preUpgrade(address(this), mint_amount1) upgrade {
-    //     // Total Supply SHOULD NOT change
-    //     assertEq(tokenV1.totalSupply(), mint_amount1);
-    //     // Balances SHOULD NOT change
-    //     assertEq(tokenV0.balanceOf(address(this)), mint_amount1);
-    //     // OWNER SHOULD NOT be able to mint anymore
-    //     vm.expectRevert(
-    //         abi.encodeWithSelector(
-    //             IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), keccak256("MINTER_ROLE")
-    //         )
-    //     );
-    //     tokenV1.mint(address(this), mint_amount2);
-    //     // MINTER SHOULD be able to mint
-    //     vm.prank(MINTER);
-    //     tokenV1.mint(address(this), mint_amount2);
-    //     assertEq(tokenV0.totalSupply(), mint_amount1 + mint_amount2);
-    //     assertEq(tokenV0.balanceOf(address(this)), mint_amount1 + mint_amount2);
-    // }
+    function test_postUpgrade() public preUpgrade(address(this), MINT_AMOUNT1) upgrade {
+        // Total Supply SHOULD NOT change
+        assertEq(tokenV2.totalSupply(), MINT_AMOUNT1);
+        // Balances SHOULD NOT change
+        assertEq(tokenV2.balanceOf(address(this)), MINT_AMOUNT1);
+        assertEq(tokenV2.balanceOf(PAUSER), 0);
+        // TOKENS are transferrable
+        vm.startPrank(address(this));
+        tokenV2.transfer(PAUSER, MINT_AMOUNT2);
+        assertEq(tokenV2.balanceOf(PAUSER), MINT_AMOUNT2);
+        assertEq(tokenV2.balanceOf(address(this)), MINT_AMOUNT1 - MINT_AMOUNT2);
+    }
 }

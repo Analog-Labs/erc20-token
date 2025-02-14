@@ -24,7 +24,7 @@ import {TestUtils, SigningKey, SigningUtils} from "analog-gmp/test/TestUtils.sol
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
 /// Hence we keep these few basic tests here more as a boilerplate for
-/// the future tests for custom added fetaures.
+/// the future tests for custom added features.
 contract AnlogTokenV2Test is Test {
     using PrimitiveUtils for GmpMessage;
     using SigningUtils for SigningKey;
