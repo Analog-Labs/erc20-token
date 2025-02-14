@@ -3,7 +3,7 @@
 > While this upgradeable token smart contract is built using [audited OZ libraries](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v5.2.0/audits),  
 > **this particular implementation has not yet underwent any security audits. Use at your own risk.**
 
-# $WANLOG ERC20 Token 
+# `$WANLOG` ERC20 Token 
 
 ## Initial Requirements
 
@@ -57,14 +57,14 @@ forge fmt && forge clean && forge tests
 
 ### Locally to Anvil
 
+<details>
+<summary>Expand me</summary>
+
 Load environment variables:
 
 ``` sh
 source .env.anvil
 ```
-
-<details>
-<summary>Expand me</summary>
 
 Spin out an [Anvil](https://book.getfoundry.sh/anvil/) fork of Sepolia:
 
@@ -82,10 +82,7 @@ It will ask you to enter the private key. As we're using Anvil's default `accoun
 
 </details>
 
-### To Sepolia testnet 
-
-> [!IMPORTANT]  
-> You need to setup environment first, see [`.env.sepolia.example`](./.env.sepolia.example)
+### To Sepolia
 
 Load environment variables:
 
@@ -93,30 +90,7 @@ Load environment variables:
 source .env.sepolia
 ```
 
-#### Dry-run on Fork 
-
-<details>
-<summary>Expand me</summary>
-
-Spin out an Anvil fork of Sepolia network:
-
-``` sh
-anvil -f $SEPOLIA_RPC_URL -p $ANVIL_PORT 
-```
-
-Deploy: 
-
-``` sh
-forge script script/00_Deploy.V1.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -i 1
-```
-
-Make sure to provide the private key of the `DEPLOYER` account upon script's interactive prompt.
-</details>
-
-
-#### Real run on Sepolia 
-
-##### Deploy 
+#### Deploy 
 
 Once steps described above taken and succeed, deploy to Sepolia with:
 
@@ -130,7 +104,7 @@ forge script script/00_Deploy.V1.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast -i
 > forge script script/00_Deploy.V1.s.sol --rpc-url $ANVIL_RPC_URL --broadcast -l
 > ```
 
-##### Verify 
+#### Verify 
 
 Figure out `solc` version used to compile the contracts: 
 
@@ -164,14 +138,14 @@ src/AnlogTokenV1.sol:AnlogTokenV1
 
 ### Locally to Anvil 
 
+<details>
+<summary>Expand me</summary>
+
 Load environment variables:
 
 ``` sh
 source .env.anvil
 ```
-
-<details>
-<summary>Expand me</summary>
 
 First spin out a local anvil and deploy `V1` to it by following instructions above.
 
@@ -188,7 +162,7 @@ It will ask you to enter the private key. As we're using Anvil's default `accoun
 </details>
 
 
-### Sepolia 
+### To Sepolia 
 
 In a live network, most probably a multisig is used for the `UPGRADER` account. Thus for doing an upgrade, 
 
