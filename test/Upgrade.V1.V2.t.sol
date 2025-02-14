@@ -7,32 +7,18 @@ import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol"
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AnlogTokenV1} from "../src/AnlogTokenV1.sol";
 import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
+import {AnlogTokenV2Test} from "./AnlogTokenV2.t.sol";
 
 /// @notice test for V1->V2 AnlogToken upgrade
-contract UpgradeV1V2Test is Test {
+contract UpgradeV1V2Test is Test, AnlogTokenV2Test {
     AnlogTokenV1 public tokenV1;
-    AnlogTokenV2 public tokenV2;
-
-    address constant MINTER = address(0);
-    address constant UPGRADER = address(1);
-    address constant PAUSER = address(2);
-    address constant UNPAUSER = address(3);
 
     uint256 constant MINT_AMOUNT1 = 100_000;
     uint256 constant MINT_AMOUNT2 = 50_000;
 
-    // V2 immutables
-    address constant GATEWAY = 0xEb73D0D236DE8F8D09dc6A52916e5849ff1E8dfA;
-    uint16 constant TIMECHAIN_ID = 1000;
-    uint256 constant MIN_TELEPORT_VAL = 1000000000000;
-
-    // fork testing
-    string SEPOLIA_RPC_URL = vm.envString("SEPOLIA_RPC_URL");
-    uint256 sepoliaFork;
-
     /// @notice deploys an UUPS proxy.
     /// Here we start with the V1 implementation
-    function setUp() public {
+    function setUp() public override {
         // NOTE: we need this in order to have deployed gateway.
         sepoliaFork = vm.createFork(SEPOLIA_RPC_URL);
         vm.selectFork(sepoliaFork);
@@ -67,9 +53,9 @@ contract UpgradeV1V2Test is Test {
 
         vm.startPrank(UPGRADER);
         Upgrades.upgradeProxy(address(tokenV1), "AnlogTokenV2.sol", emptyData, opts);
-        vm.stopPrank;
 
         tokenV2 = AnlogTokenV2(address(tokenV1));
+        vm.stopPrank();
         _;
     }
 
@@ -84,9 +70,28 @@ contract UpgradeV1V2Test is Test {
         assertEq(tokenV2.balanceOf(address(this)), MINT_AMOUNT1);
         assertEq(tokenV2.balanceOf(PAUSER), 0);
         // TOKENS are transferrable
-        vm.startPrank(address(this));
         tokenV2.transfer(PAUSER, MINT_AMOUNT2);
         assertEq(tokenV2.balanceOf(PAUSER), MINT_AMOUNT2);
         assertEq(tokenV2.balanceOf(address(this)), MINT_AMOUNT1 - MINT_AMOUNT2);
     }
+
+    /* ENSURE ALL AnlogTokenV2 functional WORKS fine AFTER UPGRADE */
+    /* BASIC */
+    function test_name_and_ticker() public override upgrade {}
+    function test_decimals() public override upgrade {}
+    function test_Mint() public override upgrade preMint(address(this), 20_000) {}
+    function test_Transfer() public override upgrade preMint(address(this), 20_000) {}
+    function test_Pause() public override upgrade preMint(address(this), 20_000) paused {}
+    function test_UnPause() public override upgrade preMint(address(this), 20_000) paused {}
+    function test_GrantRole() public override upgrade preMint(address(this), 20_000) {}
+    function test_RevokeRole() public override upgrade preMint(address(this), 20_000) {}
+    function test_RevertWhen_Unauthorized_RevokeRole() public override upgrade {}
+    function test_RevertWhen_Unauthorized_Mint() public override upgrade {}
+    function test_RevertWhen_Unauthorized_Pause() public override upgrade {}
+    function test_RevertWhen_Unauthorized_UnPause() public override upgrade paused {}
+    /* TELEPORTATION */
+    function test_TeleportOut_Below_ED() public override upgrade preMint(address(this), MIN_TELEPORT_VAL - 1) {}
+    function test_TeleportOut_Low_Value() public override upgrade preMint(address(this), MIN_TELEPORT_VAL) setRoute {}
+    function test_TeleportOut() public override upgrade preMint(address(this), MIN_TELEPORT_VAL) setRoute {}
+    function test_TeleportIn() public override upgrade setRoute setShard {}
 }
