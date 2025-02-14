@@ -59,19 +59,14 @@ contract UpgradeV1V2Test is Test {
         // We don't need initializer to be called for this upgrade,
         // as all the initial V1 token config stays the same.
         // Thus `data` is empty.
-        //        bytes memory emptyData;
+        bytes memory emptyData;
 
         Options memory opts;
         // Constructor we need only for setting immutables
         opts.constructorData = abi.encode(GATEWAY, TIMECHAIN_ID, MIN_TELEPORT_VAL);
 
         vm.startPrank(UPGRADER);
-        Upgrades.upgradeProxy(
-            address(tokenV1),
-            "AnlogTokenV2.sol",
-            abi.encodeCall(AnlogTokenV2.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER)),
-            opts
-        );
+        Upgrades.upgradeProxy(address(tokenV1), "AnlogTokenV2.sol", emptyData, opts);
         vm.stopPrank;
 
         tokenV2 = AnlogTokenV2(address(tokenV1));
