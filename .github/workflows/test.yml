@@ -1,18 +1,14 @@
 name: CI
 
 on:
-  push:
   pull_request:
-  workflow_dispatch:
 
 env:
   FOUNDRY_PROFILE: ci
   SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+
 jobs:
   check:
-    strategy:
-      fail-fast: true
-
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
@@ -32,14 +28,18 @@ jobs:
       - name: Run Forge fmt
         run: |
           forge fmt --check
-        id: fmt
 
       - name: Run Forge build
         run: |
           forge build --sizes
-        id: build
 
       - name: Run Forge tests
         run: |
-          forge test -vvv
-        id: test
+          forge test -vvv --junit > report.xml
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v5
+        if: success() || failure()
+        with:
+          report_paths: 'report.xml'
+
