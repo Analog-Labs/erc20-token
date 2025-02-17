@@ -35,11 +35,15 @@ jobs:
 
       - name: Run Forge tests
         run: |
-          forge test -vvv --junit > report.xml
+          forge test -vvv --gas-report > report
+        
+      - name: Post gas report
+        run: |
+          cat report >> $GITHUB_STEP_SUMMARY
 
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v5
-        if: success() || failure()
-        with:
-          report_paths: 'report.xml'
+      # - name: Publish Test Report
+      #   uses: mikepenz/action-junit-report@v5
+      #   if: success() || failure()
+      #   with:
+      #     report_paths: 'report.xml'
 
