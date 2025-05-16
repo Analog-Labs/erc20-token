@@ -263,7 +263,7 @@ contract AnlogTokenV2 is
      *
      * Emits a {InboundTransfer} event.
      */
-    function onGmpReceived(bytes32 id, uint128 network, bytes32, bytes calldata payload)
+    function onGmpReceived(bytes32 id, uint128 network, bytes32, uint64, bytes calldata payload)
         external
         payable
         returns (bytes32)

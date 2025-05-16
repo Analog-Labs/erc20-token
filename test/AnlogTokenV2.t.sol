@@ -113,7 +113,7 @@ contract AnlogTokenV2Test is Test {
     }
 
     function sign(GmpMessage memory gmp) internal pure returns (Signature memory) {
-        bytes32 hash = gmp.eip712hash();
+        bytes32 hash = gmp.opHash();
         SigningKey memory signer = TestUtils.createSigner(SECRET);
         (uint256 e, uint256 s) = signer.signPrehashed(hash, SIGNING_NONCE);
         return Signature({xCoord: signer.xCoord(), e: e, s: s});
@@ -254,7 +254,7 @@ contract AnlogTokenV2Test is Test {
             data: abi.encode(command)
         });
 
-        bytes32 messageID = gmp.eip712hash();
+        bytes32 messageID = gmp.opHash();
 
         vm.expectEmit(address(tokenV2));
         emit IERC20.Transfer(address(this), address(0), MIN_TELEPORT_VAL);
@@ -297,7 +297,7 @@ contract AnlogTokenV2Test is Test {
         assertEq(tokenV2.totalSupply(), 0);
 
         Signature memory sig = sign(gmp);
-        bytes32 messageID = gmp.eip712hash();
+        bytes32 messageID = gmp.opHash();
 
         vm.expectEmit(true, true, true, true, GATEWAY);
         emit IExecutor.GmpExecuted(messageID, gmp.source, gmp.dest, GmpStatus.SUCCESS, bytes32(MIN_TELEPORT_VAL));
