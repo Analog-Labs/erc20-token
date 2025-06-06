@@ -6,6 +6,10 @@ import {Upgrades, Options} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ERC20CappedUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
+
+import {Utils, ICallee} from "@oats/IOATS.sol";
 import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
 
 import {
@@ -30,12 +34,13 @@ contract AnlogTokenV2Test is Test {
     using SigningUtils for SigningKey;
 
     AnlogTokenV2 public tokenV2;
+    Callee public callee;
 
-    address constant MINTER = address(0);
-    address constant UPGRADER = address(1);
-    address constant PAUSER = address(2);
-    address constant UNPAUSER = address(3);
-    address constant NEW_MINTER = address(4);
+    address constant MINTER = address(1);
+    address constant UPGRADER = address(2);
+    address constant PAUSER = address(3);
+    address constant UNPAUSER = address(4);
+    address constant NEW_MINTER = address(5);
 
     // Teleport-related
     address constant GATEWAY = 0xEb73D0D236DE8F8D09dc6A52916e5849ff1E8dfA;
@@ -44,10 +49,17 @@ contract AnlogTokenV2Test is Test {
     // Can be queried with
     // cast storage 0xEb73D0D236DE8F8D09dc6A52916e5849ff1E8dfA 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103 -r $SEPOLIA_RPC_URL
     address constant GW_ADMIN = 0x38a78edA59AC73A95281Cb009A5EF986e320509F;
-    uint16 constant TIMECHAIN_ID = 1000;
-    uint256 constant MIN_TELEPORT_VAL = 1000000000000;
+
+    // Address of this token on the other network
+    address constant TOKEN_OTHER = address(6);
 
     uint256 constant CAP = 1_000_000;
+    uint256 constant AMOUNT = 100500;
+
+    // Mocked
+    uint256 constant COST = 42;
+    uint16 constant NETWORK = 2;
+    bytes32 constant MSG_ID = bytes32(uint256(0xff));
 
     // fork testing
     string SEPOLIA_RPC_URL = vm.envString("SEPOLIA_RPC_URL");
@@ -67,13 +79,20 @@ contract AnlogTokenV2Test is Test {
         assertEq(vm.activeFork(), sepoliaFork);
 
         Options memory opts;
-        opts.constructorData = abi.encode(GATEWAY, TIMECHAIN_ID, MIN_TELEPORT_VAL);
+        opts.constructorData = abi.encode(GATEWAY);
 
         // deploy proxy with a distinct address assigned to each role
         address proxy = Upgrades.deployUUPSProxy(
             "AnlogTokenV2.sol", abi.encodeCall(AnlogTokenV2.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER, CAP)), opts
         );
+
         tokenV2 = AnlogTokenV2(proxy);
+        callee = new Callee(address(tokenV2));
+
+        // Mock message cost
+        vm.mockCall(GATEWAY, abi.encodeWithSelector(IGateway.estimateMessageCost.selector), abi.encode(COST));
+        // Mock submit message
+        vm.mockCall(GATEWAY, abi.encodeWithSelector(IGateway.submitMessage.selector), abi.encode(MSG_ID));
     }
 
     modifier setRoute() {
@@ -120,6 +139,8 @@ contract AnlogTokenV2Test is Test {
         (uint256 e, uint256 s) = signer.signPrehashed(hash, SIGNING_NONCE);
         return Signature({xCoord: signer.xCoord(), e: e, s: s});
     }
+
+    /* BASIC FUNCTIONAL */
 
     function test_name_and_ticker() public virtual {
         assertEq(tokenV2.name(), "Wrapped Analog One Token");
@@ -221,93 +242,109 @@ contract AnlogTokenV2Test is Test {
         tokenV2.unpause();
     }
 
-    // function test_TeleportOut_Below_ED() public virtual preMint(address(this), MIN_TELEPORT_VAL - 1) {
-    //     bytes32 dest = bytes32(bytes20(UPGRADER));
-    //     vm.expectRevert("value below minimum required");
-    //     tokenV2.teleport(dest, MIN_TELEPORT_VAL - 1);
-    // }
+    /* OATS-specific FUNCTIONAL */
 
-    // function test_TeleportOut_Low_Value() public virtual preMint(address(this), MIN_TELEPORT_VAL) setRoute {
-    //     bytes32 dest = bytes32(bytes20(uint160(UPGRADER)));
+    function test_Cost() public view {
+        bytes memory caldata;
+        assertEq(tokenV2.cost(NETWORK, 21_000, caldata), COST);
+    }
 
-    //     vm.expectEmit(address(tokenV2));
-    //     emit IERC20.Transfer(address(this), address(0), MIN_TELEPORT_VAL);
-    //     vm.expectRevert("insufficient tx value");
-    //     tokenV2.teleport(dest, MIN_TELEPORT_VAL);
-    // }
+    function test_Recieve() public preMint(MINTER, CAP / 2) {
+        assertEq(tokenV2.balanceOf(MINTER), CAP / 2);
+        assertEq(tokenV2.totalSupply(), CAP / 2);
+        assertEq(tokenV2.balanceOf(PAUSER), 0);
 
-    // function test_TeleportOut() public virtual preMint(address(this), MIN_TELEPORT_VAL) setRoute {
-    //     address payable gw = payable(GATEWAY);
-    //     bytes32 dest = bytes32(uint256(uint160(UPGRADER)));
-    //     uint256 cost = tokenV2.estimateTeleportCost();
+        AnlogTokenV2.TransferCmd memory cmd = AnlogTokenV2.TransferCmd({
+            from: MINTER,
+            to: PAUSER,
+            amount: AMOUNT,
+            callee: address(0),
+            caldata: new bytes(0)
+        });
 
-    //     GmpSender source = GmpSender.wrap(bytes32(uint256(uint160(SIGNER_ADDRESS))));
+        bytes memory data = abi.encode(cmd);
+        bytes32 token_b = bytes32(uint256(uint160(TOKEN_OTHER)));
 
-    //     AnlogTokenV2.OutboundTeleportCommand memory command =
-    //         AnlogTokenV2.OutboundTeleportCommand(address(this), dest, MIN_TELEPORT_VAL);
+        // NOT GATEWAY CB
+        vm.expectPartialRevert(Utils.UnauthorizedGW.selector);
+        tokenV2.onGmpReceived(MSG_ID, NETWORK, token_b, 0, data);
 
-    //     GmpMessage memory gmp = GmpMessage({
-    //         source: source,
-    //         srcNetwork: Gateway(gw).networkId(),
-    //         dest: address(0),
-    //         destNetwork: TIMECHAIN_ID,
-    //         gasLimit: 100_000,
-    //         nonce: 0,
-    //         data: abi.encode(command)
-    //     });
+        // NETWORK NOT SET
+        vm.prank(GATEWAY);
+        vm.expectPartialRevert(Utils.UnknownNetwork.selector);
+        tokenV2.onGmpReceived(MSG_ID, NETWORK, token_b, 0, data);
 
-    //     bytes32 messageID = gmp.opHash();
+        vm.prank(UPGRADER);
+        tokenV2.set_network(NETWORK, TOKEN_OTHER);
 
-    //     vm.expectEmit(address(tokenV2));
-    //     emit IERC20.Transfer(address(this), address(0), MIN_TELEPORT_VAL);
+        // NO CALL
+        vm.startPrank(GATEWAY);
+        tokenV2.onGmpReceived(MSG_ID, NETWORK, token_b, 0, data);
+        assertEq(tokenV2.balanceOf(PAUSER), AMOUNT);
+        assertEq(tokenV2.totalSupply(), CAP / 2 + AMOUNT);
+        assertEq(callee.total(), 0);
 
-    //     vm.expectEmit(true, true, true, true, address(GATEWAY));
-    //     emit IGateway.GmpCreated(
-    //         messageID,
-    //         GmpSender.unwrap(gmp.source),
-    //         gmp.dest,
-    //         gmp.destNetwork,
-    //         gmp.gasLimit,
-    //         179835,
-    //         gmp.nonce,
-    //         gmp.data
-    //     );
+        // INVALID CALL:
+        // - should not revert, but emit InvalidCallee event,
+        // - should deliver the transfer
+        cmd.callee = address(1);
+        data = abi.encode(cmd);
+        vm.expectEmit(true, false, false, false, address(tokenV2));
+        emit Utils.InvalidCallee(address(1));
+        tokenV2.onGmpReceived(MSG_ID, NETWORK, token_b, 0, data);
+        assertEq(tokenV2.balanceOf(PAUSER), AMOUNT * 2);
+        assertEq(tokenV2.totalSupply(), CAP / 2 + AMOUNT * 2);
+        assertEq(callee.total(), 0);
 
-    //     vm.expectEmit(true, true, true, true, address(tokenV2));
-    //     emit AnlogTokenV2.OutboundTransfer(messageID, address(this), dest, MIN_TELEPORT_VAL);
+        // CALL SUCCEED
+        cmd.callee = address(callee);
+        data = abi.encode(cmd);
+        vm.expectEmit(address(tokenV2));
+        emit Utils.CallSucceed();
+        tokenV2.onGmpReceived(MSG_ID, NETWORK, token_b, 0, data);
+        assertEq(tokenV2.balanceOf(PAUSER), AMOUNT * 3);
+        assertEq(tokenV2.totalSupply(), CAP / 2 + AMOUNT * 3);
+        assertEq(callee.total(), AMOUNT);
 
-    //     tokenV2.teleport{value: cost}(dest, MIN_TELEPORT_VAL);
-    // }
+        // CALL FAILED:
+        // - should not revert, but emit callFailed event,
+        // - should deliver the transfer
+        cmd.from = address(0);
+        data = abi.encode(cmd);
+        vm.expectEmit(address(tokenV2));
+        emit Utils.CallFailed();
+        tokenV2.onGmpReceived(MSG_ID, NETWORK, token_b, 0, data);
+        assertEq(tokenV2.balanceOf(PAUSER), AMOUNT * 4);
+        assertEq(tokenV2.totalSupply(), CAP / 2 + AMOUNT * 4);
+        assertEq(callee.total(), AMOUNT);
 
-    // function test_TeleportIn() public virtual setRoute setShard {
-    //     address payable gw = payable(GATEWAY);
-    //     GmpSender source = GmpSender.wrap(bytes32(uint256(uint160(0))));
+        // CAP EXCEEDED
+        data = abi.encode(
+            AnlogTokenV2.TransferCmd({
+                from: MINTER,
+                to: PAUSER,
+                amount: CAP / 2,
+                callee: address(callee),
+                caldata: new bytes(0)
+            })
+        );
+        vm.expectPartialRevert(ERC20CappedUpgradeable.ERC20ExceededCap.selector);
+        tokenV2.onGmpReceived(MSG_ID, NETWORK, token_b, 0, data);
+    }
+}
 
-    //     AnlogTokenV2.InboundTeleportCommand memory command =
-    //         AnlogTokenV2.InboundTeleportCommand(GmpSender.unwrap(source), UPGRADER, MIN_TELEPORT_VAL);
+contract Callee is ICallee {
+    uint256 public total;
+    address immutable _token;
 
-    //     GmpMessage memory gmp = GmpMessage({
-    //         source: source,
-    //         srcNetwork: TIMECHAIN_ID,
-    //         dest: address(tokenV2),
-    //         destNetwork: Gateway(gw).networkId(),
-    //         gasLimit: 100_000,
-    //         nonce: 0,
-    //         data: abi.encode(command)
-    //     });
+    constructor(address token) {
+        _token = token;
+    }
 
-    //     assertEq(tokenV2.totalSupply(), 0);
+    function onTransferReceived(address from, address, uint256 amount, bytes calldata) external {
+        require(msg.sender == _token, "Unauthorized");
+        require(from != address(0), "Failed");
 
-    //     Signature memory sig = sign(gmp);
-    //     bytes32 messageID = gmp.opHash();
-
-    //     vm.expectEmit(true, true, true, true, GATEWAY);
-    //     emit IExecutor.GmpExecuted(messageID, gmp.source, gmp.dest, GmpStatus.SUCCESS, bytes32(MIN_TELEPORT_VAL));
-
-    //     Gateway(gw).execute(sig, gmp);
-    //     assertTrue(Gateway(gw).gmpInfo(messageID).status == GmpStatus.SUCCESS, "failed to execute GMP message");
-
-    //     assertEq(tokenV2.balanceOf(UPGRADER), MIN_TELEPORT_VAL);
-    //     assertEq(tokenV2.totalSupply(), MIN_TELEPORT_VAL);
-    // }
+        total += amount;
+    }
 }
