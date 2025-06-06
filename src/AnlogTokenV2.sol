@@ -15,7 +15,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 
 import {IGmpReceiver} from "@analog-gmp/interfaces/IGmpReceiver.sol";
 import {IGateway} from "@analog-gmp/interfaces/IGateway.sol";
-import {ISenderCaller, ICallee, Utils} from "@oats/IOATS.sol";
+import {ISenderCaller, ISender, ICallee, Utils} from "@oats/IOATS.sol";
 
 /// @notice V2: OATS-compatible Wrapped Analog ERC20 token.
 /// @custom:oz-upgrades-from AnlogTokenV1
@@ -28,12 +28,17 @@ contract AnlogTokenV2 is
     UUPSUpgradeable,
     IGmpReceiver,
     ISenderCaller,
+    ISender,
     ERC20CappedUpgradeable
 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant UNPAUSER_ROLE = keccak256("UNPAUSER_ROLE");
+
+    uint256 constant TRANSFER_CMD_SIZE = 96;
+    // TODO gas_limit justification
+    uint256 constant TRANSFER_GAS_LIMIT = 100_000;
     /**
      * @dev Address of Analog Gateway deployed in the local network, work as a "broker" to exchange messages
      *      between this contract and the Timechain.
@@ -113,6 +118,11 @@ contract AnlogTokenV2 is
         networks[networkId] = token;
     }
 
+    /// @inheritdoc ISender
+    function cost(uint16 networkId) external view returns (uint256) {
+        return GATEWAY.estimateMessageCost(networkId, TRANSFER_CMD_SIZE, TRANSFER_GAS_LIMIT);
+    }
+
     /// @inheritdoc ISenderCaller
     function cost(uint16 networkId, uint256 gasLimit, bytes memory caldata) external view returns (uint256) {
         TransferCmd memory Default;
@@ -120,6 +130,12 @@ contract AnlogTokenV2 is
         bytes memory message = abi.encode(Default);
 
         return GATEWAY.estimateMessageCost(networkId, message.length, gasLimit);
+    }
+
+    /// @inheritdoc ISender
+    function send(uint16 networkId, address recipient, uint256 amount) external payable returns (bytes32 msgId) {
+        bytes memory empty;
+        return _sendAndCall(networkId, recipient, amount, TRANSFER_GAS_LIMIT, address(0), empty);
     }
 
     /// @inheritdoc ISenderCaller
@@ -131,6 +147,17 @@ contract AnlogTokenV2 is
         address callee,
         bytes memory caldata
     ) external payable returns (bytes32 msgId) {
+        return _sendAndCall(networkId, recipient, amount, gasLimit, callee, caldata);
+    }
+
+    function _sendAndCall(
+        uint16 networkId,
+        address recipient,
+        uint256 amount,
+        uint256 gasLimit,
+        address callee,
+        bytes memory caldata
+    ) private returns (bytes32 msgId) {
         address targetToken = networks[networkId];
         require(targetToken != address(0), Utils.UnknownToken(targetToken));
 

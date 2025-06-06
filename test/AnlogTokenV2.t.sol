@@ -8,6 +8,7 @@ import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol"
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20CappedUpgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
+import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 import {Utils, ICallee} from "@oats/IOATS.sol";
 import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
@@ -50,8 +51,9 @@ contract AnlogTokenV2Test is Test {
     // cast storage 0xEb73D0D236DE8F8D09dc6A52916e5849ff1E8dfA 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103 -r $SEPOLIA_RPC_URL
     address constant GW_ADMIN = 0x38a78edA59AC73A95281Cb009A5EF986e320509F;
 
-    // Address of this token on the other network
-    address constant TOKEN_OTHER = address(6);
+    // Address of this token on this and the other network
+    address constant TOKEN = address(6);
+    address constant TOKEN_OTHER = address(7);
 
     uint256 constant CAP = 1_000_000;
     uint256 constant AMOUNT = 100500;
@@ -330,6 +332,30 @@ contract AnlogTokenV2Test is Test {
         );
         vm.expectPartialRevert(ERC20CappedUpgradeable.ERC20ExceededCap.selector);
         tokenV2.onGmpReceived(MSG_ID, NETWORK, token_b, 0, data);
+    }
+
+    function test_Send() public preMint(MINTER, CAP / 2) {
+        assertEq(tokenV2.balanceOf(MINTER), CAP / 2);
+        assertEq(tokenV2.balanceOf(PAUSER), 0);
+
+        vm.prank(PAUSER);
+        vm.expectPartialRevert(Utils.UnknownToken.selector);
+        tokenV2.send(NETWORK, MINTER, AMOUNT);
+
+        vm.prank(UPGRADER);
+        tokenV2.set_network(NETWORK, TOKEN);
+
+        vm.prank(PAUSER);
+        vm.expectPartialRevert(IERC20Errors.ERC20InsufficientBalance.selector);
+        tokenV2.send(NETWORK, MINTER, AMOUNT);
+
+        vm.prank(MINTER);
+        tokenV2.transfer(PAUSER, AMOUNT);
+
+        vm.prank(PAUSER);
+        tokenV2.send(NETWORK, MINTER, AMOUNT);
+        assertEq(tokenV2.balanceOf(PAUSER), 0);
+        assertEq(tokenV2.totalSupply(), CAP / 2 - AMOUNT);
     }
 }
 
