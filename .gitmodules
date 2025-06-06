@@ -11,3 +11,6 @@
 	path = lib/analog-gmp
 	url = https://github.com/Analog-Labs/analog-gmp
 	branch = ag/fix
+[submodule "lib/oats"]
+	path = lib/oats
+	url = https://github.com/Analog-Labs/oats
