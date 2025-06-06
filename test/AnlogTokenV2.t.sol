@@ -246,12 +246,12 @@ contract AnlogTokenV2Test is Test {
 
     /* OATS-specific FUNCTIONAL */
 
-    function test_Cost() public view {
+    function test_Cost() public virtual {
         bytes memory caldata;
         assertEq(tokenV2.cost(NETWORK, 21_000, caldata), COST);
     }
 
-    function test_Recieve() public preMint(MINTER, CAP / 2) {
+    function test_Recieve() public virtual preMint(MINTER, CAP / 2) {
         assertEq(tokenV2.balanceOf(MINTER), CAP / 2);
         assertEq(tokenV2.totalSupply(), CAP / 2);
         assertEq(tokenV2.balanceOf(PAUSER), 0);
@@ -334,7 +334,7 @@ contract AnlogTokenV2Test is Test {
         tokenV2.onGmpReceived(MSG_ID, NETWORK, token_b, 0, data);
     }
 
-    function test_Send() public preMint(MINTER, CAP / 2) {
+    function test_Send() public virtual preMint(MINTER, CAP / 2) {
         assertEq(tokenV2.balanceOf(MINTER), CAP / 2);
         assertEq(tokenV2.balanceOf(PAUSER), 0);
 

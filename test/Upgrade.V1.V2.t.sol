@@ -86,10 +86,9 @@ contract UpgradeV1V2Test is Test, AnlogTokenV2Test {
     function test_RevertWhen_Unauthorized_Mint() public override upgrade {}
     function test_RevertWhen_Unauthorized_Pause() public override upgrade {}
     function test_RevertWhen_Unauthorized_UnPause() public override upgrade paused {}
-    // /* TELEPORTATION */
-    // TODO
-    // function test_TeleportOut_Below_ED() public override upgrade preMint(address(this), MIN_TELEPORT_VAL - 1) {}
-    // function test_TeleportOut_Low_Value() public override upgrade preMint(address(this), MIN_TELEPORT_VAL) setRoute {}
-    // function test_TeleportOut() public override upgrade preMint(address(this), MIN_TELEPORT_VAL) setRoute {}
-    // function test_TeleportIn() public override upgrade setRoute setShard {}
+
+    /* OATS */
+    function test_Cost() public override upgrade {}
+    function test_Recieve() public override upgrade preMint(MINTER, CAP / 2) {}
+    function test_Send() public override upgrade preMint(MINTER, CAP / 2) {}
 }
