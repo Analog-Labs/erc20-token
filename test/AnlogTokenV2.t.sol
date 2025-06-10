@@ -11,29 +11,15 @@ import {ERC20CappedUpgradeable} from
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 import {Utils, ICallee} from "@oats/IOATS.sol";
-import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
+import {IGmpReceiver} from "gmp-2.0.0/src/IGmpReceiver.sol";
+import {IGateway} from "gmp-2.0.0/src/IGateway.sol";
 
-import {
-    IGateway,
-    IExecutor,
-    Gateway,
-    Route,
-    NetworkID,
-    ERC1967,
-    TssKey,
-    GmpMessage,
-    Signature
-} from "analog-gmp/src/Gateway.sol";
-import {GmpMessage, PrimitiveUtils, GmpSender, GmpStatus} from "analog-gmp/src/Primitives.sol";
-import {TestUtils, SigningKey, SigningUtils} from "analog-gmp/test/TestUtils.sol";
+import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
 
 /// @notice OZ ERC20 and its presets are covered with Hardhat tests.
 /// Hence we keep these few basic tests here more as a boilerplate for
 /// the future tests for custom added features.
 contract AnlogTokenV2Test is Test {
-    using PrimitiveUtils for GmpMessage;
-    using SigningUtils for SigningKey;
-
     AnlogTokenV2 public tokenV2;
     Callee public callee;
 
@@ -67,11 +53,6 @@ contract AnlogTokenV2Test is Test {
     string SEPOLIA_RPC_URL = vm.envString("SEPOLIA_RPC_URL");
     uint256 sepoliaFork;
 
-    // Chronicle TSS Secret
-    uint256 private constant SECRET = 0x42;
-    address private constant SIGNER_ADDRESS = 0x2e234DAe75C793f67A35089C9d99245E1C58470b;
-    uint256 private constant SIGNING_NONCE = 0x69;
-
     /// @notice deploys an UUPS proxy.
     /// Here we start with the V2 implementation right away.
     /// For V1->V2 upgrade see another test.
@@ -97,29 +78,6 @@ contract AnlogTokenV2Test is Test {
         vm.mockCall(GATEWAY, abi.encodeWithSelector(IGateway.submitMessage.selector), abi.encode(MSG_ID));
     }
 
-    modifier setRoute() {
-        Route memory route = Route(NetworkID.wrap(1000), 15_000_000, 0, bytes32(bytes20(address(42))), 1, 1);
-        address payable gw = payable(GATEWAY);
-
-        vm.prank(GW_ADMIN);
-        Gateway(gw).setRoute(route);
-
-        _;
-    }
-
-    modifier setShard() {
-        Route memory route = Route(NetworkID.wrap(1000), 15_000_000, 0, bytes32(bytes20(address(42))), 1, 1);
-        address payable gw = payable(GATEWAY);
-
-        SigningKey memory signer = TestUtils.createSigner(SECRET);
-        TssKey memory shardKey = TssKey({yParity: signer.yParity() == 28 ? 3 : 2, xCoord: signer.xCoord()});
-
-        vm.prank(GW_ADMIN);
-        Gateway(gw).setShard(shardKey);
-
-        _;
-    }
-
     modifier preMint(address to, uint256 amount) {
         assertEq(tokenV2.totalSupply(), 0);
         vm.prank(MINTER);
@@ -133,13 +91,6 @@ contract AnlogTokenV2Test is Test {
         vm.prank(PAUSER);
         tokenV2.pause();
         _;
-    }
-
-    function sign(GmpMessage memory gmp) internal pure returns (Signature memory) {
-        bytes32 hash = gmp.opHash();
-        SigningKey memory signer = TestUtils.createSigner(SECRET);
-        (uint256 e, uint256 s) = signer.signPrehashed(hash, SIGNING_NONCE);
-        return Signature({xCoord: signer.xCoord(), e: e, s: s});
     }
 
     /* BASIC FUNCTIONAL */

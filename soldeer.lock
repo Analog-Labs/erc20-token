@@ -1,1 +1,6 @@
-dependencies = []
+[[dependencies]]
+name = "gmp"
+version = "2.0.0"
+url = "https://soldeer-revisions.s3.amazonaws.com/gmp/2_0_0_10-06-2025_09:41:00_gmp.zip"
+checksum = "0627d52f6a803e1b80d4dcf2ccbc0960108e046cc7b752e919801d99f4d04d1c"
+integrity = "a8e64dcb47a345f40926f444d3442278b5ec6702b1e9d6130147a209eddae4a6"

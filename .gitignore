@@ -8,6 +8,8 @@ out/
 # Docs
 docs/
 
+dependencies
+
 # Dotenv files
 .env*
 !.env.anvil

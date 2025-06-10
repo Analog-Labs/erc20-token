@@ -13,8 +13,8 @@ import {ERC20CappedUpgradeable} from
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import {IGmpReceiver} from "@analog-gmp/interfaces/IGmpReceiver.sol";
-import {IGateway} from "@analog-gmp/interfaces/IGateway.sol";
+import {IGmpReceiver} from "gmp-2.0.0/src/IGmpReceiver.sol";
+import {IGateway} from "gmp-2.0.0/src/IGateway.sol";
 import {ISenderCaller, ISender, ICallee, Utils} from "@oats/IOATS.sol";
 
 /// @notice V2: OATS-compatible Wrapped Analog ERC20 token.
@@ -37,8 +37,7 @@ contract AnlogTokenV2 is
     bytes32 public constant UNPAUSER_ROLE = keccak256("UNPAUSER_ROLE");
 
     uint256 constant TRANSFER_CMD_SIZE = 96;
-    // TODO gas_limit justification
-    uint256 constant TRANSFER_GAS_LIMIT = 100_000;
+    uint64 constant TRANSFER_GAS_LIMIT = 100_000;
     /**
      * @dev Address of Analog Gateway deployed in the local network, work as a "broker" to exchange messages
      *      between this contract and the Timechain.
@@ -143,7 +142,7 @@ contract AnlogTokenV2 is
         uint16 networkId,
         address recipient,
         uint256 amount,
-        uint256 gasLimit,
+        uint64 gasLimit,
         address callee,
         bytes memory caldata
     ) external payable returns (bytes32 msgId) {
@@ -154,7 +153,7 @@ contract AnlogTokenV2 is
         uint16 networkId,
         address recipient,
         uint256 amount,
-        uint256 gasLimit,
+        uint64 gasLimit,
         address callee,
         bytes memory caldata
     ) private returns (bytes32 msgId) {
