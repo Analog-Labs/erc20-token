@@ -1,4 +1,4 @@
-@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts
-@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts
 @analog-gmp/=lib/analog-gmp/src
 @oats/=lib/oats/src
+@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts
+@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts
