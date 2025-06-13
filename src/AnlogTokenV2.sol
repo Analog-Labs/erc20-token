@@ -124,11 +124,17 @@ contract AnlogTokenV2 is
 
     /// @inheritdoc ISender
     function cost(uint16 networkId) external view returns (uint256) {
-        return GATEWAY.estimateMessageCost(networkId, TRANSFER_CMD_SIZE, TRANSFER_GAS_LIMIT);
+        bytes memory caldata;
+
+        return _cost(networkId, TRANSFER_GAS_LIMIT, caldata);
     }
 
     /// @inheritdoc ISenderCaller
     function cost(uint16 networkId, uint64 gasLimit, bytes memory caldata) external view returns (uint256) {
+        return _cost(networkId, gasLimit, caldata);
+    }
+
+    function _cost(uint16 networkId, uint64 gasLimit, bytes memory caldata) private view returns (uint256) {
         TransferCmd memory Default;
         Default.caldata = caldata;
         bytes memory message = abi.encode(Default);
