@@ -42,6 +42,10 @@ contract AnlogTokenV2 is
      * @dev Address of Analog Gateway deployed in the local network, work as a "broker" to exchange messages
      *      between this contract and the Timechain.
      *
+     * @notice we store it in immutable, making it part of implementation code, and not the state.
+     * Thus changing this value would require an upgrade, and shuold be done in implementation
+     * contract's constructor.
+     *
      * References:
      * - Protocol Overview: https://docs.analog.one/documentation/developers/analog-gmp
      * - Gateway source code: https://github.com/Analog-Labs/analog-gmp
@@ -66,9 +70,10 @@ contract AnlogTokenV2 is
         _disableInitializers();
     }
 
+    /// @custom:oz-upgrades-validate-as-initializer
     function initialize(address minter, address upgrader, address pauser, address unpauser, uint256 cap)
         public
-        initializer
+        reinitializer(2)
     {
         __ERC20_init("Wrapped Analog One Token", "WANLOG");
         __ERC20Burnable_init();

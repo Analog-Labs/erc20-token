@@ -47,10 +47,12 @@ contract UpgradeV1V2Test is Test, AnlogTokenV2Test {
         opts.constructorData = abi.encode(GATEWAY);
 
         vm.startPrank(UPGRADER);
-        address proxy = Upgrades.deployUUPSProxy(
-            "AnlogTokenV2.sol", abi.encodeCall(AnlogTokenV2.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER, CAP)), opts
+        Upgrades.upgradeProxy(
+            address(tokenV1),
+            "AnlogTokenV2.sol",
+            abi.encodeCall(AnlogTokenV2.initialize, (MINTER, UPGRADER, PAUSER, UNPAUSER, CAP)),
+            opts
         );
-
         tokenV2 = AnlogTokenV2(address(tokenV1));
         vm.stopPrank();
         _;
