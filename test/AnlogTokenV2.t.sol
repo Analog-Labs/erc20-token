@@ -311,17 +311,24 @@ contract AnlogTokenV2Test is Test {
 }
 
 contract Callee is ICallee {
-    uint256 public total;
     address immutable _token;
+
+    uint256 public total;
+    mapping(uint16 => uint256) public totalByNetwork;
 
     constructor(address token) {
         _token = token;
     }
 
-    function onTransferReceived(address from, address, uint256 amount, bytes calldata) external {
+    function onTransferReceived(uint16 newtork, address from, address, uint256 amount, bytes calldata) external {
         require(msg.sender == _token, "Unauthorized");
         require(from != address(0), "Failed");
 
+        totalByNetwork[newtork] += amount;
         total += amount;
+    }
+
+    function totalFrom(uint16 _newtork) public view returns (uint256) {
+        return totalByNetwork[_newtork];
     }
 }

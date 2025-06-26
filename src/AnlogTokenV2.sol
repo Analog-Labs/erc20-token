@@ -196,7 +196,7 @@ contract AnlogTokenV2 is
      *
      * Emits a {InboundTransfer} event.
      */
-    function onGmpReceived(bytes32 id, uint128 networkId, bytes32 source, uint64, bytes calldata data)
+    function onGmpReceived(bytes32 id, uint16 networkId, bytes32 source, uint64, bytes calldata data)
         external
         payable
         returns (bytes32)
@@ -215,7 +215,7 @@ contract AnlogTokenV2 is
             if (cmd.callee.code.length == 0) {
                 emit Utils.InvalidCallee(cmd.callee);
             } else {
-                try ICallee(cmd.callee).onTransferReceived(cmd.from, cmd.to, cmd.amount, cmd.caldata) {
+                try ICallee(cmd.callee).onTransferReceived(networkId, cmd.from, cmd.to, cmd.amount, cmd.caldata) {
                     emit Utils.CallSucceed();
                 } catch {
                     emit Utils.CallFailed();
