@@ -10,4 +10,3 @@
 [submodule "lib/oats"]
 	path = lib/oats
 	url = https://github.com/Analog-Labs/oats
-	branch = from-nw-id
