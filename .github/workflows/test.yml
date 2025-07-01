@@ -29,6 +29,10 @@ jobs:
         run: |
           forge fmt --check
 
+      - name: Run Forge soldeer update
+        run: |
+          forge soldeer update
+
       - name: Run Forge build
         run: |
           forge build --sizes
