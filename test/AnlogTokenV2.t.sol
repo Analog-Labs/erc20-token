@@ -10,9 +10,9 @@ import {ERC20CappedUpgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
+import {IGateway} from "@gmp/IGateway.sol";
+import {IGmpReceiver} from "@gmp/IGmpReceiver.sol";
 import {Utils, ICallee} from "@oats/IOATS.sol";
-import {IGmpReceiver} from "gmp-2.0.0/src/IGmpReceiver.sol";
-import {IGateway} from "gmp-2.0.0/src/IGateway.sol";
 
 import {AnlogTokenV2} from "../src/AnlogTokenV2.sol";
 

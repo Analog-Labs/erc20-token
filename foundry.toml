@@ -13,6 +13,6 @@ optimizer = true
 optimizer_runs = 10_000
 
 [dependencies]
-gmp = "2.0.0"
+gmp = "2.1.0"
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

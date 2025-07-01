@@ -13,8 +13,8 @@ import {ERC20CappedUpgradeable} from
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import {IGmpReceiver} from "gmp-2.0.0/src/IGmpReceiver.sol";
-import {IGateway} from "gmp-2.0.0/src/IGateway.sol";
+import {IGmpReceiver} from "@gmp/IGmpReceiver.sol";
+import {IGateway} from "@gmp/IGateway.sol";
 import {ISenderCaller, ISender, ICallee, Utils} from "@oats/IOATS.sol";
 
 /// @notice V2: OATS-compatible Wrapped Analog ERC20 token.
