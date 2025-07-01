@@ -1,6 +1,6 @@
 [[dependencies]]
 name = "gmp"
-version = "2.0.0"
-url = "https://soldeer-revisions.s3.amazonaws.com/gmp/2_0_0_10-06-2025_09:41:00_gmp.zip"
-checksum = "0627d52f6a803e1b80d4dcf2ccbc0960108e046cc7b752e919801d99f4d04d1c"
-integrity = "a8e64dcb47a345f40926f444d3442278b5ec6702b1e9d6130147a209eddae4a6"
+version = "2.1.0"
+url = "https://soldeer-revisions.s3.amazonaws.com/gmp/2_1_0_29-06-2025_20:00:11_gmp.zip"
+checksum = "8018d4bdb7a609b44490e30698f624595791b97de6d6c558eacd47dfb8cc0b75"
+integrity = "b89ddb044f839ee2be6d5079188ca1d21e0de3eea3ac9301ae6caebf7a7ec209"

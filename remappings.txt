@@ -1,5 +1,4 @@
-@analog-gmp/=lib/analog-gmp/src
+@gmp=dependencies/gmp-2.1.0/src
 @oats/=lib/oats/src
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts
 @openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts
-gmp-2.0.0/=dependencies/gmp-2.0.0/
