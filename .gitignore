@@ -12,3 +12,6 @@ docs/
 .env*
 !.env.anvil
 !.env.*.example
+
+# Make file for scripting commands
+Makefile
