@@ -10,9 +10,8 @@ contract AnlogTokenScript is Script {
 
     function setUp() public {}
 
-    function run() public {
+    function run() public returns (address) {
         address deployer = vm.envAddress("DEPLOYER");
-
         address minter = vm.envAddress("MINTER");
         address upgrader = vm.envAddress("UPGRADER");
         address pauser = vm.envAddress("PAUSER");
@@ -32,5 +31,6 @@ contract AnlogTokenScript is Script {
         console.log("   UPGRADER: ", upgrader);
         console.log("   PAUSER: ", pauser);
         console.log("   UNPAUSER: ", unpauser);
+        return proxyAddress;
     }
 }
